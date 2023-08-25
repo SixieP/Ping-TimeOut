@@ -1,4 +1,5 @@
 const { devs, testGuild} = require('../../../config.json');
+const { deniedMessage } = require('../../utils/baseUtils/defaultEmbeds');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
 
 
@@ -15,10 +16,15 @@ module.exports = async (client, interaction) => {
 
         if (commandObject.devOnly) {
             if (!devs.includes(interaction.member.id)) {
+                const embed = deniedMessage("No perms", "This is a DEV only command!")
                 interaction.reply({
-                    content: 'Sorry! Only developers of the bot can use this command at the moment.',
+                    embeds: [embed],
                     ephemeral: true,
                 });
+                console.log(`
+                WARNING | A dev only command was used by a non-authorized user.
+                WARNING | Guild: ${interaction.guild.name} (${interaction.guildId})
+                WARNING | User: ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id})`);
                 return;
             }
         }
