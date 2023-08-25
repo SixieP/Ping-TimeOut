@@ -48,12 +48,12 @@ module.exports = {
                 console.log("DELETE-command | END deleting PUBLIC commands");
 
                 
-                interaction.reply({embeds: [aprovedMessage("Commands removed", "All global (public) commands are removed!")], ephemeral: true})
+                interaction.reply({embeds: [aprovedMessage("All global (public) commands are removed!")], ephemeral: true})
 
             } catch (error) {
                 console.log(error);
 
-                interaction.reply({embeds: [deniedMessage("Error", "There was an error removing the guild (test) commands!")], ephemeral: true})
+                interaction.reply({embeds: [deniedMessage("There was an error removing the guild (test) commands!")], ephemeral: true})
             }
         }
         if (commandName === "test") {
@@ -67,12 +67,12 @@ module.exports = {
                 console.log("DELETE-command | END deleting TEST commands");
 
 
-                interaction.reply({embeds: [aprovedMessage("Commands removed", "All guild (test) commands are removed!")], ephemeral: true})
+                interaction.reply({embeds: [aprovedMessage("All guild (test) commands are removed!")], ephemeral: true})
 
             } catch (error) {
                 console.log(error);
 
-                interaction.reply({embeds: [deniedMessage("Error", "There was an error removing the guild (test) commands!")], ephemeral: true})
+                interaction.reply({embeds: [deniedMessage("There was an error removing the guild (test) commands!")], ephemeral: true})
             }
         }
     },

@@ -16,7 +16,7 @@ module.exports = async (client, interaction) => {
 
         if (commandObject.devOnly) {
             if (!devs.includes(interaction.member.id)) {
-                const embed = deniedMessage("No perms", "This is a DEV only command!")
+                const embed = deniedMessage("This is a DEV only command!")
                 interaction.reply({
                     embeds: [embed],
                     ephemeral: true,
