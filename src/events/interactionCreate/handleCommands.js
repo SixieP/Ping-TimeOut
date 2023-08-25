@@ -1,3 +1,4 @@
+const { inlineCode, underscore } = require('discord.js');
 const { devs, testGuild} = require('../../../config.json');
 const { deniedMessage } = require('../../utils/baseUtils/defaultEmbeds');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
@@ -14,6 +15,19 @@ module.exports = async (client, interaction) => {
 
         if (!commandObject) return;
 
+        if (commandObject?.disabled) {
+            interaction.reply({
+                embeds: [deniedMessage(`
+                Sorry, this command is currently disabled.
+
+                ${underscore("Reason:")}
+                ${commandObject.disabled}
+                `)],
+                ephemeral: true,
+            });
+            return;
+        };
+
         if (commandObject.devOnly) {
             if (!devs.includes(interaction.member.id)) {
                 const embed = deniedMessage("This is a DEV only command!")
@@ -28,6 +42,7 @@ module.exports = async (client, interaction) => {
                 return;
             }
         }
+
         if (commandObject.testCommand) {
             if (!interaction.guild.id === testGuild) {
                 interaction.reply({
