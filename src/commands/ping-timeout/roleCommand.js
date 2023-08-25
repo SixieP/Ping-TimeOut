@@ -20,11 +20,31 @@ module.exports = {
                 },
                 {
                     name: "timeout-duration",
-                    description: "How long a role should timeout for when pinged (in minutes)",
+                    description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
-                }
-            ]
+                },
+                {
+                    name: "timeout-magnitude",
+                    description: "If you want to time a role out for X min/hour/day",
+                    type: ApplicationCommandOptionType.Integer,
+                    required: true,
+                    choices: [
+                        {
+                            name: "min",
+                            value: 0
+                        },
+                        {
+                            name: "hour",
+                            value: 1
+                        },
+                        {
+                            name: "day",
+                            value: 2,
+                        },
+                    ],
+                },
+            ],
         },
         {
             name: "edit",
@@ -37,12 +57,32 @@ module.exports = {
                     required: true,
                     type: ApplicationCommandOptionType.Role,
                 },
-                {
+{
                     name: "timeout-duration",
-                    description: "How long a role should timeout for when pinged (in minutes)",
+                    description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
-                }
+                },
+                {
+                    name: "timeout-magnitude",
+                    description: "If you want to time a role out for X min/hour/day",
+                    type: ApplicationCommandOptionType.Integer,
+                    required: true,
+                    choices: [
+                        {
+                            name: "min",
+                            value: 0
+                        },
+                        {
+                            name: "hour",
+                            value: 1
+                        },
+                        {
+                            name: "day",
+                            value: 2,
+                        },
+                    ],
+                },
             ]
         },
         {
@@ -102,7 +142,18 @@ module.exports = {
                 return;
             }
 
-            const timeoutTime = interaction.options.get('timeout-duration').value;
+            const timeoutDur = interaction.options.get('timeout-duration').value;
+            const timeoutMag = interaction.options.get('timeout-magnitude').value;
+            var timeoutTime;
+            if (timeoutMag === 0) {
+                timeoutTime = timeoutDur;
+            }
+            if(timeoutMag === 1) {
+                timeoutTime = timeoutDur*60;
+            }
+            if (timeoutMag === 2) {
+                timeoutTime = timeoutDur*60*24;
+            };
 
             var mentionableError;
             await role.setMentionable(true).catch(error => {
@@ -162,7 +213,19 @@ module.exports = {
                 return;
             }
 
-            const timeoutTime = interaction.options.get('timeout-duration').value;
+            const timeoutDur = interaction.options.get('timeout-duration').value;
+            const timeoutMag = interaction.options.get('timeout-magnitude').value;
+            var timeoutTime;
+            if (timeoutMag === 0) {
+                timeoutTime = timeoutDur;
+            }
+            if(timeoutMag === 1) {
+                timeoutTime = timeoutDur*60;
+            }
+            if (timeoutMag === 2) {
+                timeoutTime = timeoutDur*60*24;
+            };
+
             const updateTimeoutRespone = await updateTimeoutTime(roleId, timeoutTime, true)
             if (updateTimeoutRespone === "error") {
                 await role.setMentionable(false).catch(error => {console.log(error)});
