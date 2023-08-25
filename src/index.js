@@ -1,5 +1,5 @@
 const { Client, IntentsBitField } = require('discord.js');
-const { applicationId, botToken } = require('../config.json');
+const { botToken } = require('../config.json');
 
 const eventHandler = require('./handlers/eventHandler');
 
