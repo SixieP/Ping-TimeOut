@@ -1,4 +1,6 @@
+const { inlineCode, underscore } = require('discord.js');
 const { devs, testGuild} = require('../../../config.json');
+const { deniedMessage } = require('../../utils/baseUtils/defaultEmbeds');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
 
 
@@ -13,15 +15,34 @@ module.exports = async (client, interaction) => {
 
         if (!commandObject) return;
 
+        if (commandObject?.disabled) {
+            interaction.reply({
+                embeds: [deniedMessage(`
+                Sorry, this command is currently disabled.
+
+                ${underscore("Reason:")}
+                ${commandObject.disabled}
+                `)],
+                ephemeral: true,
+            });
+            return;
+        };
+
         if (commandObject.devOnly) {
             if (!devs.includes(interaction.member.id)) {
+                const embed = deniedMessage("This is a DEV only command!")
                 interaction.reply({
-                    content: 'Sorry! Only developers of the bot can use this command at the moment.',
+                    embeds: [embed],
                     ephemeral: true,
                 });
+                console.log(`
+                WARNING | A dev only command was used by a non-authorized user.
+                WARNING | Guild: ${interaction.guild.name} (${interaction.guildId})
+                WARNING | User: ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id})`);
                 return;
             }
         }
+
         if (commandObject.testCommand) {
             if (!interaction.guild.id === testGuild) {
                 interaction.reply({
