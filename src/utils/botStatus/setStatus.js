@@ -2,7 +2,6 @@ const { getAllRoles } = require("../database/botStatus.js/setStatus");
 
 module.exports = async (client) => {
     var roleAmounth = 0;
-    console.log(new Date().getMinutes());
 
     roles = await getAllRoles();
     if (roles[0]) {
