@@ -27,7 +27,7 @@ module.exports = (existingCommand, localCommand) => {
 
   //if the command is a testCommand add TESTCOMMAND | to the localdescription. (so it is the same as the existing command)
   if (localCommand.testCommand) {
-    localDescription = `TESTCOMMAND | ${localCommand.description}`
+    localDescription = `TEST-COMMAND | ${localCommand.description}`
   } else {
     localDescription = localCommand.description
   }
