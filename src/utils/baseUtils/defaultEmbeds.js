@@ -3,19 +3,19 @@ const { EmbedBuilder } = require("discord.js");
 
 function deniedMessage(description, title) {
 
-    var noPermsEmbed
+    var deniedEmbed
     if (title) {
-        noPermsEmbed = new EmbedBuilder()
+        deniedEmbed = new EmbedBuilder()
         .setColor(0xC83400)
         .setTitle(title)
         .setDescription(`:x: ${description}`);
     } else {
-        noPermsEmbed = new EmbedBuilder()
+        deniedEmbed = new EmbedBuilder()
         .setColor(0xC83400)
         .setDescription(`:x: ${description}`);
     }
 
-    return noPermsEmbed;
+    return deniedEmbed;
 }
 
 function aprovedMessage(description, title) {
