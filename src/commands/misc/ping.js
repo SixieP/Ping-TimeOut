@@ -5,7 +5,7 @@ module.exports = {
     defaultMemberPermissions: null,
     // devOnly: Boolean,
     // inactive: Boolean,
-    testCommand: Boolean,
+    // testCommand: Boolean,
 
     callback: (client, interaction) => {
         const firstEmbed = new EmbedBuilder()
