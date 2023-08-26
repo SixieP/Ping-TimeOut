@@ -108,7 +108,7 @@ module.exports = {
 
     //delete: Boolean,
     //devOnly: Boolean,
-    testCommand: Boolean,
+    //testCommand: Boolean,
 
     callback: async (client, interaction) => {
         commandName = interaction.options._subcommand;

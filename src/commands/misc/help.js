@@ -23,7 +23,7 @@ module.exports = {
     ],
     // devOnly: Boolean,
     // inactive: Boolean,
-    testCommand: Boolean,
+    // testCommand: Boolean,
 
     callback: (client, interaction) => {
         const page = interaction.options.get('page')?.value;
