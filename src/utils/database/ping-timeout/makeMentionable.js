@@ -7,7 +7,7 @@ async function getNotMentionableRoles(guildId) {
             const [ roles ] = await pool.query(`
             select * from roles
             where
-            mentionable = false`, 
+            mentionable = 0`, 
             [guildId]);
             return roles;
         } else {
@@ -16,7 +16,7 @@ async function getNotMentionableRoles(guildId) {
             where
             guildId = ?
             and
-            mentionable = false`, 
+            mentionable = 0`, 
             [guildId]);
             return roles;
         }
@@ -31,7 +31,7 @@ async function updateSetMentionable (roleId) {
         await pool.query(`
         update roles
         set 
-        mentionable = true
+        mentionable = 1
         where
         roleId = ?`, [ roleId ])
     } catch (error) {

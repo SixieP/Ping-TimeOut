@@ -3,6 +3,13 @@ const pool = connectDatabase();
 
 
 async function updateLastMention (roleId, lastMention, mentionable) {
+    var mentionInt;
+    if (mentionable === true) {
+        mentionInt = 1;
+    } else {
+        mentionInt = 0;
+    }
+    
     try {
         await pool.query(`
         update roles
@@ -10,7 +17,7 @@ async function updateLastMention (roleId, lastMention, mentionable) {
         lastMention = ?,
         mentionable = ?
         where
-        roleId = ?`, [lastMention, mentionable, roleId ])
+        roleId = ?`, [lastMention, mentionInt, roleId ])
     } catch (error) {
         console.log(`Error with database-query (ping-timeout/newMention.js/updateLastMention) | Error: ${error}`);
         return "error";
