@@ -34,7 +34,7 @@ module.exports = {
         var mention = "";
 
         for (const timedRole of timedRoles) {
-            const mentionDateMs = Date.parse((timedRole.lastMention).toUTCString());
+            const mentionDateMs = Date.parse((timedRole.lastMention)?.toUTCString());
             const mentionDateSec = mentionDateMs/1000
             const timeNow = Date.parse(new Date().toUTCString());
             const timePassedMs = timeNow-mentionDateMs;
@@ -46,9 +46,13 @@ module.exports = {
 
             var restTime;
             if (timePassedMin > timeOutTime) {
-                restTime = "--:--"
+                restTime = "--:--";
             } else {
-                restTime = `<t:${mentionDateSec+timedRole.timeoutTime*60}:R>`;
+                if (!timedRole.lastMention) {
+                    restTime = "--:--";
+                } else {
+                    restTime = `<t:${mentionDateSec+timedRole.timeoutTime*60}:R>`;
+                }
             }
 
             role = role + `<@&${roleId}>\n`;
@@ -65,7 +69,7 @@ module.exports = {
                 inline: true,
             },
             {
-                name: "Last Ping",
+                name: "Last Mention",
                 value: mention,
                 inline: true,
             },
