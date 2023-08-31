@@ -3,7 +3,7 @@ const { newTimeOutRole, updateTimeoutTime, removeTimeoutRole } = require("../../
 const { roleInDatabase } = require("../../utils/database/ping-timeout/general");
 
 module.exports = {
-    name: "timeout-role",
+    name: "timed-role",
     description: "Command to add/edit/remove a timeout role",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
     options: [
