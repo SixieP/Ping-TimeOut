@@ -58,7 +58,7 @@ module.exports = {
             embed = new EmbedBuilder()
             .setTitle("Ping TimeOut | Setup")
             .setDescription(`
-            **Important**: You need to have the __Administrator__ permission for most of the commands. (Administrators can change slash command permissions in the intergration settings)
+            **Important**: You need to have the __Administrator__ permission for most of the commands. (Administrators can change slash command permissions under the intergration settings)
             
             **1** - Use ${inlineCode("/check")} to check for all roles that you can add a timeout to. 
             **2** - Use ${inlineCode("/timed-role add")} to add a timeout to a role.
