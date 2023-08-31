@@ -9,8 +9,8 @@ With this bot you can add a timer to specific roles so they can only be pinged e
 ---
 
 #### Setup
-1. First check with _/timeout-check_ to which roles you can add a timer. It also shows what roles already have a timer connected.
-2. Add your first timer to a role with _/timeout-role add [role] [duration] [magnitude]_. Example command _/timeout-role add @mod 1 hour_. This makes it so that normal users can only ping the @mod role every hour.
+1. First check with _/check_ to which roles you can add a timer. It also shows what roles already have a timer connected.
+2. Add your first timer to a role with _/timed-role add [role] [duration] [magnitude]_. Example command _/timed-role add @mod 1 hour_. This makes it so that normal users can only ping the @mod role every hour.
 3. Let a normal user ping the role and see if they can ping it again directly after or if they need to wait.
 
 ---
