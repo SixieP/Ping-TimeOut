@@ -166,7 +166,7 @@ module.exports = {
                 
             });
             if (mentionableError === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the timeout time`, ephemeral: true})
+                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
                 return;
             }
             if (mentionableError === "ERROR") {
@@ -205,7 +205,7 @@ module.exports = {
                 
             });
             if (mentionableError === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the timeout role (or is admin)`, ephemeral: true})
+                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
                 return;
             }
             if (mentionableError === "ERROR") {
@@ -270,7 +270,7 @@ module.exports = {
                 });;
             };
             if (error === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the timeout role (or is admin)`, ephemeral: true})
+                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
                 return;
             }
             if (error === "ERROR") {
