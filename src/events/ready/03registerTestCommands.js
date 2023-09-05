@@ -2,10 +2,11 @@ const { testGuild } = require('../../../config.json');
 const areCommandsDifferent = require('../../utils/baseUtils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/baseUtils/getApplicationCommands');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
+const { logging } = require('../../utils/baseUtils/logging');
 
 module.exports = async (client) => {
     try {
-        console.log('STARTUP-command | BEGIN test command check')
+        logging("info", `Begin command check'`, "priv_command_reg")
         const localCommands = getLocalCommands();
         const applicationCommands = await getApplicationCommands(
             client, 
@@ -26,13 +27,13 @@ module.exports = async (client) => {
             if (existingCommand) {
                 if (localCommand.deleted) {
                     await applicationCommands.delete(existingCommand.id);
-                    console.log(`TEST-COMMAND | The private command ${name} has been deleted cause it is set to deleted`);
+                    logging("info", `The private command ${name} has been deleted cause it is set to deleted`, "priv_command_reg")
                     continue;
                 }
 
                 if (!localCommand.testCommand) {
                     await applicationCommands.delete(existingCommand.id);
-                    console.log(`TEST-COMMAND | The command ${name} has been deleted from the private commands cause it is not a test command anymore`);
+                    logging("info", `The command ${name} has been deleted from the private commands cause it is not a test command anymore`, "priv_command_reg")
                     continue;
                 }
 
@@ -42,16 +43,16 @@ module.exports = async (client) => {
                         options,
                         defaultMemberPermissions,
                     });
-                    console.log(`TEST-COMMAND | The private command ${name} has been changed.`);
+                    logging("info", `The private command ${name} has been changed.`, "priv_command_reg")
                 }
             } else {
                 if (localCommand.deleted) {
-                    //console.log(`TEST-COMMAND | Skipping registering private command ${name} cause it is set to deleted`)
+                    //logging("info", `Skipping registering private command ${name} cause it is set to deleted`, "priv_command_reg")
                     continue;
                 }
 
                 if (!localCommand.testCommand) {
-                    //console.log(`TEST-COMMAND | Skipping registering "${name}" cause it is not a private command`)
+                    //logging("info", `Skipping registering "${name}" cause it is not a private command`, "priv_command_reg")
                     continue;
                 }
 
@@ -61,12 +62,11 @@ module.exports = async (client) => {
                     options,
                     defaultMemberPermissions,
                 });
-
-                console.log(`TEST-COMMAND | The private command ${name} has been registered.`);
+                logging("info", `The private command ${name} has been registered.`, "priv_command_reg")
             }
         }
-        console.log('STARTUP-command | END test command check')
+        logging("info", `End command check`, "priv_command_reg")
     } catch (error) {
-        console.error(`There was a error registering a test command | Error: ${error}`)
+        logging("error", `There was a error registering a test command: ${error}`, "priv_command_reg")
     }
 };

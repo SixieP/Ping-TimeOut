@@ -1,4 +1,6 @@
+const { logging } = require("../../utils/baseUtils/logging");
+
 module.exports = async (client) => {
-    console.log(`STARTUP-main | The bot "${client.user.tag}" is online!`);
+    logging("info", `The bot "${client.user.tag}" is online!`, "startup")
     console.log('=== BOT ONLINE ===');
 }

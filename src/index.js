@@ -13,6 +13,7 @@ const client = new Client({
 //START check database connection
 const { mysqlHost, mysqlPort, mysqlUser, mysqlPass, mysqlDatabase } = require('../config.json');
 const mysql = require('mysql2');
+const { logging } = require('./utils/baseUtils/logging');
 
 const pool = mysql.createPool({
     host: mysqlHost,
@@ -22,10 +23,12 @@ const pool = mysql.createPool({
     database: mysqlDatabase
 });
 
+logging("start");
+
 pool.query(`show databases`, function (err) {
     if (err) throw err;
 
-    console.log(`STARTUP-database | Succesfully connected to the database. Database: "${mysqlDatabase}"`)
+    logging("info", `Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup')
 })
 //END check database connection
 
