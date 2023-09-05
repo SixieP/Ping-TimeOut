@@ -4,7 +4,7 @@ const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
 
 module.exports = {
-    name: "timeout-check",
+    name: "check",
     description: "Check what roles are available for a timeout",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
 
