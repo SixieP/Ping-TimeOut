@@ -115,7 +115,7 @@ module.exports = {
                     color: 0x327fa8,
                     title: "Guilds",
                     fields: embedFields,
-                    timestap: new Date().toISOString(),
+                    timestamp: new Date().toISOString(),
                     footer: {
                         text: `Page ${page}/${totalPage}`
                     },
