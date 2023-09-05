@@ -14,7 +14,7 @@ function logging(type, message, subtype, logfile=false) {
         logOut = (`\n\n==================================================\nStarting bot. Current time/date: ${time}\n==================================================`);
     } else {
         if (subtype) {
-            logOut = `[${time} | ${type.toUpperCase()}/${subtype.toLowerCase()}] ${message}`;
+            logOut = `[${time} | ${type.toUpperCase()}/${subtype}] ${message}`;
             
         } else {
             logOut = `[${time} | ${type.toUpperCase()}] ${message}`;
