@@ -85,7 +85,7 @@ module.exports = {
             } else {
                 if (!page) {
                     page = 1;
-                } else
+                }
                 
                 var counter = 0;
                 var guildInfo = [];
