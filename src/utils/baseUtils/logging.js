@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 
-// info types: INFO, WARNING, ERROR
+// info types: INFO, WARNING, ERROR, DEV
 
 
 function logging(type, message, subtype, logfile=false) {
