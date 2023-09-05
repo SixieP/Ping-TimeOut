@@ -14,7 +14,7 @@ async function roleInDatabase(roleId) {
             return false;
         }
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/general.js/roleInDatabase) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/general.js/roleInDatabase")
         return "error";
     }
 }

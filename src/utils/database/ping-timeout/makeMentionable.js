@@ -21,7 +21,7 @@ async function getNotMentionableRoles(guildId) {
             return roles;
         }
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/makeMentionable.js/getNotMentionableRoles) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/makeMentionable.js/getNotMentionableRoles")
         return "error";
     }
 }
@@ -35,7 +35,7 @@ async function updateSetMentionable (roleId) {
         where
         roleId = ?`, [ roleId ])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/makeMentionable.js/updateSetMentionable) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/makeMentionable.js/updateSetMentionable")
         return "error";
     }
 }

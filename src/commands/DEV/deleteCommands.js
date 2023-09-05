@@ -5,6 +5,7 @@ const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
 
 const { testGuild } = require('../../../config.json');
 const { aprovedMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
+const { logging } = require("../../utils/baseUtils/logging");
 
 module.exports = {
     name: "dev-delete_commands",
@@ -35,17 +36,17 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const commandName = interaction.options.get('command-channel').value;
-
+        await interaction.deferReply({ephemeral: true});
 
         if (commandName === "public") {
             try {
                 const appCommands = await getApplicationCommands(client);
 
-                console.log("DELETE-command | START deleting PUBLIC commands");
+                logging("dev", "Start deleting commands", "pub_command")
                 for (const appCommand of appCommands.cache) {
                     appCommands.delete(appCommand[1].id)
                 }
-                console.log("DELETE-command | END deleting PUBLIC commands");
+                logging("dev", "End deleting commands", "pub_command")
 
                 
                 interaction.reply({embeds: [aprovedMessage("All global (public) commands are removed!")], ephemeral: true})
@@ -60,17 +61,17 @@ module.exports = {
             try {
                 const appCommands = await getApplicationCommands(client, testGuild);
 
-                console.log("DELETE-command | START deleting TEST commands");
+                logging("dev", "Start deleting commands", "test_command")
                 for (const appCommand of appCommands.cache) {
                     appCommands.delete(appCommand[1].id)
                 }
-                console.log("DELETE-command | END deleting TEST commands");
+                logging("dev", "End deleting commands", "test_command")
 
 
                 interaction.reply({embeds: [aprovedMessage("All guild (test) commands are removed!")], ephemeral: true})
 
             } catch (error) {
-                console.log(error);
+                logging("error", error);
 
                 interaction.reply({embeds: [deniedMessage("There was an error removing the guild (test) commands!")], ephemeral: true})
             }

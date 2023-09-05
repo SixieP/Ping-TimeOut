@@ -17,7 +17,7 @@ async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
         (?, ?, ?, ?)`,
         [roleId, guildId, timeoutTime, mentionInt])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/newTimeOutRole) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/newTimeOutRole");
         return "error";
     }
 }
@@ -40,7 +40,7 @@ async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
         roleId = ?`,
         [timeoutTime, mentionInt, roleId]);
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/updateTimeoutTime) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
         return "error";
     }
 }
@@ -52,7 +52,7 @@ async function removeTimeoutRole(roleId) {
         where
         roleId = ?`, [roleId])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/removeTimeoutRole) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/removeTimeoutRole");
         return "error"
     }
 }

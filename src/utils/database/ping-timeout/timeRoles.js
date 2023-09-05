@@ -14,7 +14,7 @@ async function rolesByGuild(guildId) {
         };
         return result;
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/timeRoles.js/rolesByGuild) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/timeRoles.js/rolesByGuild");
         return "error";
     }
 }

@@ -1,3 +1,4 @@
+const { logging } = require('../../baseUtils/logging');
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 
@@ -11,7 +12,7 @@ async function removeAllGuildRoles(guildId) {
 
         return roles;
     } catch (error) {
-        console.log(`Error with database-query (guildDelete/removRoles.js/removeAllGuildRoles) | Error: ${error}`);
+        logging("error", error, "database/guildDelete/removRoles.js/removeAllGuildRoles")
         return "error";
     }
 }

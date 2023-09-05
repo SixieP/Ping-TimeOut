@@ -28,7 +28,7 @@ logging("start");
 pool.query(`show databases`, function (err) {
     if (err) throw err;
 
-    logging("info", `Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup')
+    logging("info", `Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup-database')
 })
 //END check database connection
 

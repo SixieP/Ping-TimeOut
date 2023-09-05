@@ -13,9 +13,9 @@ module.exports = async () => {
             )
         `);
         if (result.warningStatus === 1) return;
-        console.log('DATABASE-table_create | Created the non existing table "roles"')
+        logging("info", 'Created the non existing table "roles"', "database/tables/ping-timeout.js");
 
     } catch (error) {
-        console.error(`There was an error creating a non-existing table "roles" | Error: ${error}`)
+        logging("error", `There was an error creating a non-existing table "roles": ${error}`, "database/tables/ping-timeout.js");
     }
 }
