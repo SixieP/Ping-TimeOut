@@ -7,7 +7,7 @@ const path = require('path');
 
 function logging(type, message, subtype, logfile=false) {
     const now = new Date();
-    const time = `${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()}-${now.getUTCDay()}/${now.getUTCMonth()}/${now.getUTCFullYear()}`
+    const time = `${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()}-${now.getUTCDay()}/${now.getUTCMonth()+1}/${now.getUTCFullYear()}`
     
     var logOut;
     if (type === "start") {
@@ -22,7 +22,7 @@ function logging(type, message, subtype, logfile=false) {
     }
     console.log(logOut);
 
-    const daydate = `${now.getUTCDay()}-${now.getUTCMonth()}-${now.getUTCFullYear()}`
+    const daydate = `${now.getUTCDay()}-${now.getUTCMonth()+1}-${now.getUTCFullYear()}`
     
     const logLocation = path.join(__dirname, '..', '..', '..', 'logs', `${daydate}.txt`)
     fs.appendFile(logLocation, `${logOut}\n`, (err) => {
