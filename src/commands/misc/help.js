@@ -33,8 +33,6 @@ module.exports = {
             .setTitle("Ping TimeOut | Help")
             .setDescription(`
             ${bold("All commands")}
-            ${underscore("Setup")}
-            ${inlineCode("/help setup")} Get the setup guide.
 
             ${underscore("Main")}
             ${inlineCode("/timed-role add")} Add a timeout to a role that doesn't have one already.
@@ -42,15 +40,16 @@ module.exports = {
             ${inlineCode("/timed-role remove")} Remove a timeout from a role that has one.
 
             ${underscore("Misc")}
-            ${inlineCode("/check")} Get a list of all the roles that you can add a timeout to. It also shows what roles already have a timeout enabled.
-            ${inlineCode("/ping")} Get the bots ping. You can also use this to check if the bot is still working when other commands don't work correctly.
+            ${inlineCode("/check")} Gives a list of all the roles that you can add a timeout to. It also shows what roles already have a timeout enabled.
+            ${inlineCode("/roles")} Gives info aboud all timed roles.
+            ${inlineCode("/ping")} Gives the bots ping. You can also use this to check if the bot is still working when other commands don't work correctly.
 
             ${underscore("Help")}
-            ${inlineCode("/help")} Get the default help page.
-            ${inlineCode("/help 1")} Get help page 1 (default).
-            ${inlineCode("/help setup")} Get the setup guide.
+            ${inlineCode("/setup")} Gives the setup guide.
+            ${inlineCode("/help")} Gives the default help page.
+            ${inlineCode("/help 1")} Gives help page 1 (default).
 
-            *For other help pages use the optional page on the help command*
+            *For other help pages than default use the optional page on the help command*
             `)
         }
 
@@ -66,6 +65,8 @@ module.exports = {
             **3** - You can check if the bot work by following one of these steps
             **3a** - Use a account that doesn't have the permission to ping @everyone and ping the role. Then check if they can ping the role directly again.
             **3b** - Check in ${inlineCode("Server Settings -> Audit Log")} if the bot updated the role to Mentionable.
+
+            **4** - Use ${inlineCode("/roles")} to see the role you added!
             `)
         }
 
