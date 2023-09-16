@@ -1,6 +1,8 @@
 const { ApplicationCommandOptionType, PermissionFlagsBits, inlineCode } = require("discord.js");
 const { newTimeOutRole, updateTimeoutTime, removeTimeoutRole } = require("../../utils/database/ping-timeout/roleCommand");
 const { roleInDatabase } = require("../../utils/database/ping-timeout/general");
+const { aprovedMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
+const { logging } = require("../../utils/baseUtils/logging");
 
 module.exports = {
     name: "timed-role",
@@ -127,18 +129,21 @@ module.exports = {
             const roleId = interaction.options.get('role').value;
 
             if (await roleInDatabase(roleId) === true) {
-                interaction.reply({content: `This role already is a timeout role`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`This role already is a timeout role`)], ephemeral: true})
+                logging("rolecommand.js-notok", `${roleId} | This role already is a timeout role`, "add", true)
                 return;
             }
 
             if (roleId === interaction.guild.roles.everyone.id) {
-                interaction.reply({content: `Can't add a timeout to @everyone`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`Can't add a timeout to @everyone`)], ephemeral: true})
+                logging("rolecommand.js-notok", `input: ${roleId}, @everyone: ${interaction.guild.roles.everyone.id} | Can't add a timeout to @everyone`, "add", true)
                 return;
             }
 
             const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
             if (role.managed) {
-                interaction.reply({content: `Can't add a timeout to the role cause the role is managed by a bot <@&${roleId}>`, ephemeral: true})
+                logging("rolecommand.js-notok", `${role} | Can't add a timeout to the role cause the role is managed by a bot <@&${roleId}>`, "add", true)
+                interaction.reply({embeds: [deniedMessage(`Can't add a timeout to the role cause the role is managed by a bot <@&${roleId}>`)], ephemeral: true})
                 return;
             }
 
@@ -157,29 +162,32 @@ module.exports = {
 
             var mentionableError;
             await role.setMentionable(true).catch(error => {
+                logging("rolecommand.js-notok", `${error} | noPerms`, "add", true)
                 if (error.code === 50013) {
                     mentionableError = "noPerms";
                 } else {
-                    mentionableError = "ERROR";
-                    console.log("roleCommand.js", error);
+                    mentionableError = error;
+                    logging("roleCommand.js", error, "add")
                 }
                 
             });
             if (mentionableError === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
                 return;
             }
-            if (mentionableError === "ERROR") {
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+            if (mentionableError) {
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(error)}. Please try again later`)], ephemeral: true})
                 return;
             }
 
             const newTimeOutRespone = await newTimeOutRole(roleId, guildId, timeoutTime, true);
             if (newTimeOutRespone === "error") {
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+                logging("rolecommand.js-notok", `${interaction.guildId}, ${inlineCode(roleId, guildId, timeoutTime)} | There was an error executing this command. Please try again later`, "add-newTimeOutResponse", true);
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
                 return;
             } else {
-                interaction.reply({content: `Successfully added this role as a timeout role`, ephemeral: true})
+                logging("rolecommand.js-ok", `${interaction.guildId}, ${inlineCode(roleId, guildId, timeoutTime)} | Successfully added this role as a timeout role`, "add-newTimeOutResponse", true);
+                interaction.reply({embeds: [aprovedMessage(`Successfully added this role as a timeout role`)], ephemeral: true})
                 return;
             }
         };
@@ -188,7 +196,8 @@ module.exports = {
             const roleId = interaction.options.get('role').value;
 
             if (await roleInDatabase(roleId) === false) {
-                interaction.reply({content: `This role isn't a role monitored by this bot`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`This role isn't a role monitored by this bot`)], ephemeral: true})
+                logging("rolecommand.js-notok", `${roleId} | This role isn't a role monitored by this bot`, "edit",true)
                 return;
             }
 
@@ -196,20 +205,21 @@ module.exports = {
             //make the role mentionable
             var mentionableError;
             await role.setMentionable(true).catch(error => {
+                logging("rolecommand.js-notok", `${role, error} | noPerms`, "edit",true)
                 if (error.code === 50013) {
                     mentionableError = "noPerms";
                 } else {
-                    mentionableError = "ERROR";
-                    console.log("roleCommand.js", error);
+                    mentionableError = error;
+                    logging("roleCommand.js", error, "edit")
                 }
                 
             });
             if (mentionableError === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
                 return;
             }
-            if (mentionableError === "ERROR") {
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+            if (mentionableError) {
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(mentionableError)}. Please try again later`)], ephemeral: true})
                 return;
             }
 
@@ -228,11 +238,15 @@ module.exports = {
 
             const updateTimeoutRespone = await updateTimeoutTime(roleId, timeoutTime, true)
             if (updateTimeoutRespone === "error") {
-                await role.setMentionable(false).catch(error => {console.log(error)});
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+                await role.setMentionable(false).catch(error => {
+                    logging("rolecommand.js-notok", `${error}`, "edit",true)
+                });
+
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
                 return;
             } else {
-                interaction.reply({content: `Successfully edited this timeout role`, ephemeral: true})
+                interaction.reply({embeds: [aprovedMessage(`Successfully edited this timeout role`)], ephemeral: true})
+                logging("rolecommand.js-ok", `${roleId} | Successfully edited this timeout role`, "edit",true)
                 return;
             }
         };
@@ -241,7 +255,7 @@ module.exports = {
             const roleId = interaction.options.get('role').value;
 
             if (await roleInDatabase(roleId) === false) {
-                interaction.reply({content: `This role isn't a role monitored by this bot`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`This role isn't a role monitored by this bot`)], ephemeral: true})
                 return;
             }
 
@@ -252,38 +266,42 @@ module.exports = {
             var error;
             if (mentionable === true) {
                 await roleData.setMentionable(true, "Made role mentionable when removing it from the bot").catch(error => {
+                    logging("rolecommand.js-notok", `${error}`, "remove",true)
+
                     if (error.code === 50013) {
                         error = "noPerms";
                     } else {
                         error = "ERROR";
-                        console.log("roleCommand.js", error);
+                        logging("roleCommand.js", error, "remove")
                     }
                 });
             } else {
                 await roleData.setMentionable(false, "Made role not mentionable when removing it from the bot").catch(error => {
+                    logging("rolecommand.js-notok", `${error}`, "remove",true)
                     if (error.code === 50013) {
                         error = "noPerms";
-                    } else {
-                        error = "ERROR";
-                        console.log("roleCommand.js", error);
+                    } else {;
+                        logging("roleCommand.js", error, "remove")
                     }
                 });;
             };
             if (error === "noPerms") {
-                interaction.reply({content: `There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`, ephemeral: true})
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
                 return;
             }
-            if (error === "ERROR") {
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+            if (error) {
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(error)}. Please try again later`)], ephemeral: true})
                 return;
             }
 
             const removeResponse = await removeTimeoutRole(roleId);
             if (removeResponse === "error") {
-                interaction.reply({content: `There was an error executing this command. Please try again later`, ephemeral: true})
+                logging("rolecommand.js-notok", `removeTimeoutRole | There was an error executing this command. Please try again later`, "remove",true)
+                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
                 return;
             } else {
-                interaction.reply({content: `Succesfully removed this role from the bot. Mentionable ${inlineCode(mentionable)}`, ephemeral: true})
+                logging("rolecommand.js-ok", `removeTimeoutRole | Succesfully removed this role from the bot. Mentionable ${inlineCode(mentionable)}`, "remove",true)
+                interaction.reply({embeds: [aprovedMessage(`Succesfully removed this role from the bot. Mentionable ${inlineCode(mentionable)}`)], ephemeral: true})
                 return;
             }
         }
