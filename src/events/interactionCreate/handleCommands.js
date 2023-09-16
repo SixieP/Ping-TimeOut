@@ -13,7 +13,12 @@ module.exports = async (client, interaction) => {
             (cmd) => cmd.name === interaction.commandName
             );
 
-        if (!commandObject) return;
+        if (!commandObject) {
+            interaction.reply({
+                embeds: [deniedMessage(`
+                Can't find this command. Please contact the bots owner`)], ephemeral: true
+            });
+            return;};
 
         if (commandObject?.disabled) {
             interaction.reply({
