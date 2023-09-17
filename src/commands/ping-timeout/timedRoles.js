@@ -21,11 +21,11 @@ module.exports = {
         
 
         if (timedRoles === "noDataError") {
-            interaction.reply({embeds: [deniedMessage("There are no roles with a timer")], ephemeral: true});
+            interaction.reply({embeds: [deniedMessage("There are no timed roles")], ephemeral: true});
             return;
         }
         if (timedRoles === "error") {
-            interaction.reply({embeds: [deniedMessage("Database error. Please try again later and/or contact the bot owner")], ephemeral: true});
+            interaction.reply({embeds: [deniedMessage("Database error. Please try again later and/or contact the bots owner")], ephemeral: true});
             return;
         }
 
