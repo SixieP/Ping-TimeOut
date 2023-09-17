@@ -26,6 +26,7 @@ With this bot you can add a timer to specific roles so they can only be pinged e
 - `/timed-role add` *Add a timer to a role that hasn't one* (administrator)
 - `/timed-role edit` *Edit a timer connected to a role* (administrator)
 - `/timed-role remove` *Remove a timer from a role* (administrator)
+- `/timed-role reset-timer` *Reset the timeout timer of a role back to zero* (administrator)
 
 - `/roles` *Gives you info about all the timed roles* (manage messages permission)
 

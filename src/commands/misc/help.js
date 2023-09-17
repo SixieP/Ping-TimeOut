@@ -38,6 +38,7 @@ module.exports = {
             ${inlineCode("/timed-role add")} Add a timeout to a role that doesn't have one already.
             ${inlineCode("/timed-role edit")} Edit the timeout duration of a role that already has one.
             ${inlineCode("/timed-role remove")} Remove a timeout from a role that has one.
+            ${inlineCode("/timed-role reset-timer")} Resets the timeout timer of a role back to zero.
 
             ${underscore("Misc")}
             ${inlineCode("/check")} Gives a list of all the roles that you can add a timeout to. It also shows what roles already have a timeout enabled.
