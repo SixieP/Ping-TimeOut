@@ -3,7 +3,7 @@ const pool = connectDatabase();
 
 async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
     var mentionInt;
-    if (mentionable === true) {
+    if (mentionable === true | mentionable === 1) {
         mentionInt = 1;
     } else {
         mentionInt = 0;
@@ -24,7 +24,7 @@ async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
 
 async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
     var mentionInt;
-    if (mentionable === true) {
+    if (mentionable === true | mentionable === 1) {
         mentionInt = 1;
     } else {
         mentionInt = 0;
@@ -57,9 +57,32 @@ async function removeTimeoutRole(roleId) {
     }
 }
 
+async function makeMentionable(roleId, mentionable) {
+    var mentionInt;
+    if (mentionable === true | mentionable === 1) {
+        mentionInt = 1;
+    } else {
+        mentionInt = 0;
+    }
+
+    try {
+        await pool.query(`
+        update roles
+        set
+        mentionable = ?
+        where
+        roleId = ?`,
+        [mentionInt, roleId]);
+    } catch (error) {
+        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
+        return "error";
+    }
+}
+
 //make functions global
 module.exports = { 
     newTimeOutRole,
     updateTimeoutTime,
     removeTimeoutRole,
+    makeMentionable,
 };
