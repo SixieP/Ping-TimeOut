@@ -16,11 +16,15 @@ module.exports = {
         const guildId = interaction.guildId;
         const roles = client.guilds.cache.get(guildId).roles.cache;
 
+        const botId = client.user.id;
+        const botUsername = client.user.username
+
         const everyoneRole = client.guilds.cache.get(guildId).roles.everyone
         const everyoneId = everyoneRole.id
 
         var roleOutput = "";
         var trackingOutput = ""
+        var canChangeOutput = "";
         for (const role of roles) {
             if(role[1].id === everyoneId) {
                 if (role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) {
@@ -37,13 +41,28 @@ module.exports = {
             //check if the role already is being timed
             const timed = await roleInDatabase(roleId);
             trackingOutput = trackingOutput + inlineCode(timed) + `\n`
+
+            //check if the bot has higher perms
+            const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
+
+            const botRole = botUser.roles.cache.find(r => r.name === botUsername)
+
+            const comparedPos = role[1].comparePositionTo(botRole);
+
+            if (comparedPos < 0) {
+                canChangeOutput = canChangeOutput + inlineCode('true') + `\n`;
+            } else {
+                canChangeOutput = canChangeOutput + inlineCode('false') + `\n`;
+            }
         }
+        
 
         const embed = new EmbedBuilder()
         .setTitle("Available roles")
         .setFields(
             {name: 'Role(s)', value: roleOutput, inline: true},
-            {name: 'Timed', value: trackingOutput, inline: true}
+            {name: 'Timed Role', value: trackingOutput, inline: true},
+            {name: 'Bot Can Change', value: canChangeOutput, inline: true},
         )
         .setTimestamp();
 
