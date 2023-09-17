@@ -9,7 +9,7 @@ const { fullLogging } = require('../../../config.json');
 
 function logging(type, message, subtype, logfileOnly=false) {
     const now = new Date();
-    const time = `${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()}-${now.getUTCDay()}/${now.getUTCMonth()+1}/${now.getUTCFullYear()}`
+    const time = `${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()}-${now.getUTCDate()}/${now.getUTCMonth()+1}/${now.getUTCFullYear()}`
     
     var logOut;
     if (type === "start") {
@@ -23,7 +23,7 @@ function logging(type, message, subtype, logfileOnly=false) {
         }
     }
 
-    const daydate = `${now.getUTCDay()}-${now.getUTCMonth()+1}-${now.getUTCFullYear()}`
+    const daydate = `${now.getUTCDate()}-${now.getUTCMonth()+1}-${now.getUTCFullYear()}`
 
     //only log to console if it is NOT log file only
     if (!logfileOnly) {
