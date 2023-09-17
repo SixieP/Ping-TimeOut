@@ -37,10 +37,7 @@ module.exports = {
         for (const timedRole of timedRoles) {
             const mentionDateMs = Date.parse((timedRole.lastMention)?.toUTCString());
             const mentionDateSec = mentionDateMs/1000
-            const timeNow = Date.parse(new Date().toUTCString());
-            const timePassedMs = timeNow-mentionDateMs;
-            const timePassedSec = timePassedMs/1000;
-            const timePassedMin = timePassedSec/60;
+            const mentionable = timedRole.mentionable;
 
             const timeoutMin = timedRole.timeoutTime;
             const timeoutSec = timeoutMin*60;
@@ -49,7 +46,7 @@ module.exports = {
             const roleId = timedRole.roleId
 
             var restTime;
-            if (timePassedMin > timeOutTime) {
+            if (mentionable === 1) {
                 restTime = "--:--";
             } else {
                 if (!timedRole.lastMention) {
