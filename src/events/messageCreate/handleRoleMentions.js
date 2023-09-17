@@ -1,9 +1,32 @@
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { updateLastMention } = require('../../utils/database/ping-timeout/newMention');
 
+const {logging} = require('../../utils/baseUtils/logging');
+const { PermissionFlagsBits } = require('discord.js');
+
 module.exports = async (client, message) => {
     if(message.author.bot) return;
+
+    //check if the message contains a mention
+    if(!message.mentions.roles.first()) return;
+
     const guildId = message.guildId;
+
+    const roles = message.member.roles.cache;
+
+    var mentionEveryonePerms = false;
+    for (role of roles) {
+        if (role[1].name === "@everyone") return;
+        if (!role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) return;
+
+        logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that does have the mention everyone perms`, "mentionEveryone-perms", true)
+        mentionEveryonePerms = true;
+        continue;
+    }
+
+    if (!mentionEveryonePerms) return;
+    logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that doesnt have the mention everyone perms`, "mentionEveryone-perms", true)
+
 
     const mentionedRoles = message.mentions.roles;
     for(mentionedRole of mentionedRoles) {
@@ -11,19 +34,23 @@ module.exports = async (client, message) => {
 
         const inDatabase = await roleInDatabase(roleId);
         if (inDatabase === true) {
-
             const nowUTC = new Date();
 
             updateLastMention(roleId, nowUTC, "false");
 
             //make the role not mentionable
-            role = await client.guilds.cache.get("827809152742719489").roles.fetch(roleId).catch(error => {
-                console.log("handleRoleMentions.js", error);
+            role = await client.guilds.cache.get(guildId).roles.fetch(roleId).catch(error => {
+                logging("handleRoleMentions.js", error, "error", true)
             });
+
             if (role) {
                 role.setMentionable(false, "Role got mentioned").catch(error => {
                     console.log("handleRoleMentions.js", error)
                 });
+
+                logging("handleRoleMentions.js", `${guildId} | role got mentioned and has been made publicly unmentionable`, "unmentionable", true)
+            } else {
+                logging("handleRoleMentions.js", `${guildId} | role got mentioned and should have made not mentionable but that didnt happen`, "unmentionable", true)
             }
         }
     }
