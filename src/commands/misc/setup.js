@@ -1,8 +1,6 @@
 const { EmbedBuilder, inlineCode, Embed, PermissionFlagsBits} = require('discord.js');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
 
-const localCommands = getLocalCommands();
-
 module.exports = {
     name: "setup",
     description: 'Setup instructions for the bot',
@@ -12,7 +10,7 @@ module.exports = {
     // testCommand: Boolean,
 
     callback: (client, interaction) => {
-        
+        const localCommands = getLocalCommands();
 
         //get all info from the help command
         const commandObject = localCommands.find(
