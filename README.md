@@ -9,9 +9,17 @@ With this bot you can add a timer to specific roles so they can only be pinged e
 ---
 
 #### Setup
-1. First check with _/check_ to which roles you can add a timer. It also shows what roles already have a timer connected.
-2. Add your first timer to a role with _/timed-role add [role] [duration] [magnitude]_. Example command _/timed-role add @mod 1 hour_. This makes it so that normal users can only ping the @mod role every hour.
-3. Let a normal user ping the role and see if they can ping it again directly after or if they need to wait.
+**Important**: You need to have the __Administrator__ permission for most of the commands. (Administrators can change slash command permissions under the intergration settings)
+            
+1. Check if the bot has all required permissions by using _/help permscheck_ or running the _/setup_ command'.
+2.  Use _/check_ to check for all roles that you can add a timeout to. 
+3.  Use _/timed-role add_ to add a timeout to a role.
+
+4. You can check if the bot work by following one of these steps: <br>
+**4a.** If possible use a account that doesn't have the permission to ping @everyone and ping the role you want to timeout. Then check if they can ping the role directly again. <br>
+**4b.** Check in _Server Settings -> Audit Log_ if the bot updated the role to Mentionable.
+
+5. Use _/roles_ to see the role(s) you added!
 
 ---
 #### Notes/Good to know
