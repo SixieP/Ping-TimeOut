@@ -10,20 +10,21 @@ module.exports = async (client, message) => {
        const roleId = (mentionedRole[1].id);
 
         const inDatabase = await roleInDatabase(roleId);
-        if (inDatabase !== true) return;
+        if (inDatabase === true) {
 
-        const nowUTC = new Date();
+            const nowUTC = new Date();
 
-        updateLastMention(roleId, nowUTC, "false");
+            updateLastMention(roleId, nowUTC, "false");
 
-        //make the role not mentionable
-        role = await client.guilds.cache.get("827809152742719489").roles.fetch(roleId).catch(error => {
-            console.log("handleRoleMentions.js", error);
-        });
-        if (role) {
-            role.setMentionable(false, "Role got mentioned").catch(error => {
-                console.log("handleRoleMentions.js", error)
+            //make the role not mentionable
+            role = await client.guilds.cache.get("827809152742719489").roles.fetch(roleId).catch(error => {
+                console.log("handleRoleMentions.js", error);
             });
+            if (role) {
+                role.setMentionable(false, "Role got mentioned").catch(error => {
+                    console.log("handleRoleMentions.js", error)
+                });
+            }
         }
     }
 
