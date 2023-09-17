@@ -16,15 +16,14 @@ module.exports = async (client, message) => {
 
     var mentionEveryonePerms = false;
     for (role of roles) {
-        if (role[1].name === "@everyone") return;
-        if (!role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) return;
+        if (role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) {
 
-        logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that does have the mention everyone perms`, "mentionEveryone-perms", true)
-        mentionEveryonePerms = true;
-        continue;
+            logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that does have the mention everyone perms`, "mentionEveryone-perms", true)
+            mentionEveryonePerms = true;
+        }
     }
 
-    if (!mentionEveryonePerms) return;
+    if (mentionEveryonePerms) return;
     logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that doesnt have the mention everyone perms`, "mentionEveryone-perms", true)
 
 
