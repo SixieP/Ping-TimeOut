@@ -3,6 +3,7 @@ const { deniedMessage, aprovedMessage } = require('../../utils/baseUtils/default
 module.exports = {
     name: "help",
     description: 'Use this command if you need help with the bot',
+    defaultMemberPermissions: PermissionFlagsBits.Administrator,
     options: [
         {
             name: "page",
