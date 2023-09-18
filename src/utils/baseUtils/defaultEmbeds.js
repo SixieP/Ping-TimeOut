@@ -1,5 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
-
+const { EmbedBuilder, inlineCode, bold, italic } = require("discord.js");
 
 function deniedMessage(description, title) {
 
