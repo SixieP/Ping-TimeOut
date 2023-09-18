@@ -62,7 +62,7 @@ module.exports = {
         .setFields(
             {name: 'Role(s)', value: roleOutput, inline: true},
             {name: 'Timed Role', value: trackingOutput, inline: true},
-            {name: 'Bot Can Change', value: canChangeOutput, inline: true},
+            {name: 'Bot Can Manage', value: canChangeOutput, inline: true},
         )
         .setTimestamp();
 
