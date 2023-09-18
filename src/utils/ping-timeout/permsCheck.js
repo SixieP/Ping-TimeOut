@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, inlineCode, bold, InviteTargetType, italic } = require("discord.js");
 
 function permsCheck(client, interaction) {
     //permscheck - fullPerms: 277294107648
