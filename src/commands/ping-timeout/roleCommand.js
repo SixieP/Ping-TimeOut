@@ -1,8 +1,10 @@
-const { ApplicationCommandOptionType, PermissionFlagsBits, inlineCode } = require("discord.js");
+const { ApplicationCommandOptionType, PermissionFlagsBits, inlineCode, bold } = require("discord.js");
 const { newTimeOutRole, updateTimeoutTime, removeTimeoutRole, makeMentionable } = require("../../utils/database/ping-timeout/roleCommand");
 const { roleInDatabase } = require("../../utils/database/ping-timeout/general");
 const { aprovedMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
 const { logging } = require("../../utils/baseUtils/logging");
+const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
+const compareBotRoleRank = require("../../utils/ping-timeout/compareBotRoleRank");
 
 module.exports = {
     name: "timed-role",
@@ -184,8 +186,19 @@ module.exports = {
                 }
                 
             });
+
             if (mentionableError === "noPerms") {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
+                const rolePos = compareBotRoleRank(client, roleId);
+
+                var rolePosEmbed;
+                if (rolePos > 0) {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                } else {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                }
+
+
+                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, interaction), rolePosEmbed], ephemeral: true})
                 return;
             }
             if (mentionableError) {
@@ -228,7 +241,17 @@ module.exports = {
                 
             });
             if (mentionableError === "noPerms") {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
+                const rolePos = compareBotRoleRank(client, roleId);
+
+                var rolePosEmbed;
+                if (rolePos > 0) {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                } else {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                }
+
+
+                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, interaction), rolePosEmbed], ephemeral: true})
                 return;
             }
             if (mentionableError) {
@@ -300,7 +323,17 @@ module.exports = {
                 });;
             };
             if (error === "noPerms") {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. ${inlineCode('No perms')} make sure that the role of the bot has a higher rank than the role you want to time out and that the bot has the manage roles permission (or is admin)`)], ephemeral: true})
+                const rolePos = compareBotRoleRank(client, roleId);
+
+                var rolePosEmbed;
+                if (rolePos > 0) {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                } else {
+                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
+                }
+
+
+                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, interaction), rolePosEmbed], ephemeral: true})
                 return;
             }
             if (error) {
