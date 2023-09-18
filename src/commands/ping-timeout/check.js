@@ -52,7 +52,7 @@ module.exports = {
             if (comparedPos < 0) {
                 canChangeOutput = canChangeOutput + inlineCode('true') + `\n`;
             } else {
-                canChangeOutput = canChangeOutput + inlineCode('false') + `\n`;
+                canChangeOutput = canChangeOutput + inlineCode('false - bot rank to low') + `\n`;
             }
         }
         
