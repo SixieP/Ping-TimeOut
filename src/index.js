@@ -6,7 +6,8 @@ const eventHandler = require('./handlers/eventHandler');
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMessages
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.GuildPresences
     ]
 });
 
