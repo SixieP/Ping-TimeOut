@@ -50,7 +50,7 @@ module.exports = {
                 restTime = "--:--";
             } else {
                 if (!timedRole.lastMention) {
-                    restTime = "--:--";
+                    restTime = inlineCode("--:--");
                 } else {
                     restTime = `<t:${mentionDateSec+timedRole.timeoutTime*60}:R>`;
                 }
@@ -76,7 +76,7 @@ module.exports = {
             },
             {
                 name: "Timeout",
-                value: timeout,
+                value: inlineCode(timeout),
                 inline: true,
             },
             {
