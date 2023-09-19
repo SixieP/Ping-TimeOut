@@ -65,7 +65,10 @@ module.exports = {
         )
         .setTimestamp();
 
-        const user = client.guilds.cache.get(guildId).members.cache.get(interaction.user.id);
+        client.guilds.fetch();
+        const guild = client.guilds.cache.get(guildId);
+        guild.members.fetch();
+        const user = guild.members.cache.get(interaction.user.id)
         const userPresence = user.presence?.clientStatus;
         if (userPresence?.mobile) {
             embed.data.footer = {text: "It has been detected that you are using a mobile device. This embed may not show up correctly on your device. Consider using discord on a computer"};  

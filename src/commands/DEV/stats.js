@@ -2,6 +2,8 @@ const { PermissionFlagsBits, ApplicationCommandOptionType, EmbedBuilder, inlineC
 const registerPublicCommands = require('../../events/ready/02registerPublicCommands');
 const registerTestCommands = require('../../events/ready/03registerTestCommands');
 const { deniedMessage } = require(`../../utils/baseUtils/defaultEmbeds`);
+const { statGetRole, statGetRolesByGuild, statGetAllRoles } = require("../../utils/database/DEV/stats");
+const { timeout } = require("nodemon/lib/config");
 
 module.exports = {
     name: "dev-stats",
@@ -25,6 +27,28 @@ module.exports = {
                 }
             ],
         },
+        {
+            name: "roles",
+            description: "Get all guilds that the bot is part of",
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "page",
+                    description: "The page you want to see (default is 1)",
+                    type: ApplicationCommandOptionType.Integer,
+                },
+                {
+                    name: "guild-id",
+                    description: "All roles in a specific guild",
+                    type: ApplicationCommandOptionType.String,
+                },
+                {
+                    name: "role-id",
+                    description: "Info about a specific role",
+                    type: ApplicationCommandOptionType.String,
+                },
+            ],
+        },
     ],
 
     //deleted: Boolean,
@@ -41,8 +65,6 @@ module.exports = {
             var page = interaction.options.get('page')?.value;
 
             if (guildIdIn) {
-
-                //console.log(guilds);
 
                 const guild = guilds?.find(
                     (guildFind) => guildFind.id === guildIdIn
@@ -124,6 +146,147 @@ module.exports = {
                 interaction.reply({embeds: [embed]});
 
             }
-        }
+        };
+
+        if (subCom === "roles") {
+            var page;
+            if (interaction.options.get('page') !== null) {
+                page = interaction.options.get('page')?.value;
+            } else {
+                page = 1
+            }
+
+            const guildId = interaction.options.get('guild-id')?.value;
+            const roleId = interaction.options.get('role-id')?.value
+
+            if (roleId) {
+                const page = interaction.options.get("page")?.value;
+                const guildId = interaction.options.get("guild-id")?.value;
+                const roleId = interaction.options.get("role-id")?.value;
+    
+                if (roleId) {
+                    const databaseRoleInfo = await statGetRole(roleId);
+    
+                    if (!databaseRoleInfo) {
+                        interaction.reply({embeds: [deniedMessage("This role doesnt have a entry into the database")], ephemeral: true});
+                        return;
+                    }
+    
+                    const guildId = databaseRoleInfo[0].guildId;
+                    const lastmention = databaseRoleInfo[0].lastMention;
+                    const timeoutTime = databaseRoleInfo[0].timeoutTime;
+                    var mentionable = databaseRoleInfo[0].mentionable;
+    
+                    if (mentionable = 1) {
+                        mentionable = "true"
+                    } else {
+                        mentionable = "false"
+                    }
+    
+                    client.guilds.fetch();
+                    const guildInfo = client.guilds.cache.get(guildId);
+                    guildInfo.roles.fetch();
+                    const roleInfo = guildInfo.roles.cache.get(roleId);
+    
+                    const memberCount = guildInfo.memberCount;
+    
+                    //set rest time
+                    const mentionDateMs = Date.parse((lastmention)?.toUTCString());
+                    const mentionDateSec = mentionDateMs/1000
+    
+                    var restTime;
+                    if (mentionable === 1) {
+                        restTime = "--:--";
+                    } else {
+                        if (!lastmention) {
+                            restTime = "--:--";
+                        } else {
+                            restTime = `<t:${mentionDateSec+timeoutTime*60}:R>`;
+                        }
+                    }
+    
+                    //console.log(roleInfo)
+                    const roleUsers = roleInfo.members.map(m=>m.user.tag);
+    
+                    const roleInfoEmbed = new EmbedBuilder()
+                    .setColor(roleInfo.color)
+                    .setTitle(`${roleInfo.name} (${roleId})`)
+                    .addFields(
+                        {name: "Guild", value: `${inlineCode(guildInfo.name)} (${inlineCode(guildInfo.id)})`, inline: true},
+                        {name: "Members", value: inlineCode(memberCount.toString()), inline: true},
+                        {name: "Role members", value: inlineCode(roleUsers.length), inline: true}
+                    )
+                    .addFields(
+                        {name: "Mentionable", value: inlineCode(mentionable), inline: false},
+                    )
+                    .addFields(
+                        {name: "Timeout", value: inlineCode(secondsToDhms(timeoutTime*60)), inline: true},
+                        {name: "Last Mention", value: inlineCode(lastmention), inline: true},
+                        {name: "Rest Time", value: inlineCode(restTime), inline: true}
+                    )
+                    .setTimestamp();
+    
+                    interaction.reply({embeds: [roleInfoEmbed], ephemeral: true});
+                }
+                return;
+            };
+
+            if (guildId) {
+                const rolesinfo = await statGetRolesByGuild(guildId);
+
+                const guildName = interaction.guild.name;
+
+                const embed = await rolesList(client, guildName, rolesinfo, page);
+
+                interaction.reply({embeds: [embed], ephemeral: true});
+
+                return;
+            };
+
+            const globalRoles = await statGetAllRoles();
+
+            const title = "Global";
+
+            const embed = await rolesList(client, title, globalRoles, page);
+
+            interaction.reply({embeds: [embed], ephemeral: true});
+        };  
     },
 };
+
+function secondsToDhms(seconds) {
+    seconds = Number(seconds);
+    var d = Math.floor(seconds / (3600*24));
+    var h = Math.floor(seconds % (3600*24) / 3600);
+    var m = Math.floor(seconds % 3600 / 60);
+    var s = Math.floor(seconds % 60);
+    
+    var dDisplay = d > 0 ? d + (d == 1 ? " day" : " days") : "";
+    var hDisplay = h > 0 ? h + (h == 1 ? " hour" : " hours") : "";
+    var mDisplay = m > 0 ? m + (m == 1 ? " minute" : " minutes") : "";
+    var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+    return dDisplay + hDisplay + mDisplay + sDisplay;
+}
+
+async function rolesList (client, title, roles, page) {
+    const embedTitle = `${title} timeout role(s)`
+    
+    var roleNames = "";
+    var roleGuilds = "";
+    for (role of roles) {
+        const guildData = client.guilds.cache.get(role.guildId);
+        const roleData = guildData.roles.cache.get(role.roleId);
+
+        roleNames = roleNames + `${inlineCode(roleData.name)} (${inlineCode(roleData.id)}) \n`;
+        roleGuilds = roleGuilds + `${inlineCode(guildData.name)} (${inlineCode(guildData.id)})`;
+    }
+
+    const rolesEmbed = new EmbedBuilder()
+    .setTitle(embedTitle)
+    .addFields(
+        {name: 'role', value: roleNames, inline: true},
+        {name: 'guild', value: roleGuilds, inline: true}
+    )
+    .setTimestamp();
+    return rolesEmbed;
+}
