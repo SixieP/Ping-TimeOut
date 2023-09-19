@@ -205,7 +205,6 @@ module.exports = {
                         }
                     }
     
-                    //console.log(roleInfo)
                     const roleUsers = roleInfo.members.map(m=>m.user.tag);
     
                     const roleInfoEmbed = new EmbedBuilder()
@@ -234,6 +233,11 @@ module.exports = {
             if (guildId) {
                 const rolesinfo = await statGetRolesByGuild(guildId);
 
+                if (!rolesinfo[0]) {
+                    interaction.reply({embeds: [deniedMessage("This guide has no TimeOut roles :/")], ephemeral: true});
+                    return;
+                }
+
                 const guildName = interaction.guild.name;
 
                 const embed = await rolesList(client, guildName, rolesinfo, page);
@@ -244,6 +248,10 @@ module.exports = {
             };
 
             const globalRoles = await statGetAllRoles();
+
+            if (!globalRoles[0]) {
+                interaction.reply({embeds: [deniedMessage("There are no TimeOut roles :/")]})
+            }
 
             const title = "Global";
 
@@ -269,24 +277,37 @@ function secondsToDhms(seconds) {
 }
 
 async function rolesList (client, title, roles, page) {
-    const embedTitle = `${title} timeout role(s)`
+    const totalRoles = roles.length;
+    const totalPages = Math.ceil(totalRoles/20)
+
+    const startRole = page*20-20;
+    if (startRole+1 > totalRoles) {
+        return deniedMessage(`Page ${inlineCode(page)} doesn't exist. Max page is ${inlineCode(totalPages)}`);
+    }
+
+    const embedTitle = `${title} TimeOut role(s)`
     
     var roleNames = "";
     var roleGuilds = "";
-    for (role of roles) {
-        const guildData = client.guilds.cache.get(role.guildId);
-        const roleData = guildData.roles.cache.get(role.roleId);
+    
+    const endRole = startRole+20
+    for (roleObjectNr = startRole; roleObjectNr < endRole; roleObjectNr++) {
+        if (totalRoles > roleObjectNr) {
+            const guildData = client.guilds.cache.get(roles[roleObjectNr].guildId);
+            const roleData = guildData.roles.cache.get(roles[roleObjectNr].roleId);
 
-        roleNames = roleNames + `${inlineCode(roleData.name)} (${inlineCode(roleData.id)}) \n`;
-        roleGuilds = roleGuilds + `${inlineCode(guildData.name)} (${inlineCode(guildData.id)})`;
-    }
+            roleNames = roleNames + `${inlineCode(roleData.name)} (${inlineCode(roleData.id)}) \n`;
+            roleGuilds = roleGuilds + `${inlineCode(guildData.name)} (${inlineCode(guildData.id)}) \n`;
+        };
+    };
 
     const rolesEmbed = new EmbedBuilder()
     .setTitle(embedTitle)
     .addFields(
-        {name: 'role', value: roleNames, inline: true},
-        {name: 'guild', value: roleGuilds, inline: true}
+        {name: 'ROLE', value: roleNames, inline: true},
+        {name: 'GUILD', value: roleGuilds, inline: true}
     )
+    .setFooter({text: `Page: ${page}/${totalPages}`})
     .setTimestamp();
     return rolesEmbed;
 }
