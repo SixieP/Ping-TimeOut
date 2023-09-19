@@ -60,6 +60,7 @@ module.exports = {
 
         if (subCom === "guilds") {
             
+            client.guilds.fetch();
             const guilds = client.guilds.cache;
             const guildIdIn = interaction.options.get('guildid')?.value;
             var page = interaction.options.get('page')?.value;
@@ -78,6 +79,7 @@ module.exports = {
                 const guildId = guild.id;
                 const guildName = guild.name;
                 const guildMemberCount = guild.memberCount;
+                const timedRoles = await statGetRolesByGuild(guild.id);
 
                 
                 const embed = new EmbedBuilder()
@@ -95,53 +97,62 @@ module.exports = {
                         inline: true,
                     },
                     {
+                        name: "Timed Roles",
+                        value: inlineCode(Object.keys(timedRoles).length),
+                        inline: true,
+                    },
+                    {
                         name: "Membercount",
                         value: inlineCode(guildMemberCount),
                         inline: false,
-                    }
+                    },
                 )
                 .setThumbnail(guild.iconURL())
                 .setTimestamp();
 
                 interaction.reply({embeds: [embed]});
             } else {
-                if (!page) {
-                    page = 1;
+                var page;
+                if (interaction.options.get('page') !== null) {
+                    page = interaction.options.get('page')?.value;
+                } else {
+                    page = 1
                 }
                 
-                var counter = 0;
-                var guildInfo = [];
-                for (const guild of guilds) {
-                    guildInfo[counter] = {id: guild[1].id, name: guild[1].name};
-                    counter++;
+                client.guilds.fetch();
+                const totalGuilds = client.guilds.cache.size;
+                const totalPages = Math.ceil(totalGuilds/20)
+
+                const allGuildsInfo = client.guilds.cache;
+                const allGuildIds =  allGuildsInfo.map(guild => guild.id);
+                
+                var guildIds = "";
+                var guildMembers = "";
+                var guildTimedRoles = "";
+
+
+                const startGuildNr = totalPages*20-20;
+                const endGuildNr = startGuildNr+19
+                for (guildObjectNr = startGuildNr; guildObjectNr < endGuildNr; guildObjectNr++) {
+                    if (guildObjectNr < totalGuilds) {
+                        const guild = client.guilds.cache.get(allGuildIds[guildObjectNr]);
+                        const timedRoles = await statGetRolesByGuild(guild.id);
+
+                        guildIds = guildIds + `${inlineCode(guild.name)} (${(inlineCode(guild.id))}) \n`;
+                        guildMembers = guildMembers + `${inlineCode(guild.memberCount)} \n`;
+                        guildTimedRoles = guildTimedRoles + `${inlineCode(Object.keys(timedRoles).length)} \n`;
+                    }
                 }
-                const totalPage = Math.ceil((counter+1)/20);
 
-                if (page > totalPage) {
-                    interaction.reply({embeds: [deniedMessage(`There are only ${totalPage} page(s)`)]})
-                    return;
-                };
-
-                const guildNrStart = (page-1)*20;
-
-                var embedFieldCount = 0;
-                var embedFields = []
-                for (let guildNrCount = guildNrStart; guildNrCount < guildNrStart+20; guildNrCount++) {
-                    if (!guildInfo[guildNrCount]) continue;
-
-                    embedFields[embedFieldCount] = {name: guildInfo[guildNrCount].name, value: `GuildId: ${inlineCode(guildInfo[guildNrCount].id)}`};
-                    embedFieldCount++;
-                }
-
-                const embed = {
-                    color: 0x327fa8,
-                    title: "Guilds",
-                    fields: embedFields,
-                    timestamp: new Date().toISOString(),
-                    footer: {
-                        text: `Page ${page}/${totalPage}`
-                    },
-                };
+                const embed = new EmbedBuilder()
+                .setTitle("Ping TimeOut Guilds")
+                .addFields(
+                    {name: "Guild (ID)", value: guildIds.substring(0, 1024), inline: true},
+                    {name: "Total Members", value: guildMembers.substring(0, 1024), inline: true},
+                    {name: "Timed Roles", value: guildTimedRoles.substring(0, 1024), inline: true},
+                )
+                .setFooter({text: `page ${page}/${totalPages}`})
+                .setTimestamp();
 
                 interaction.reply({embeds: [embed]});
 
@@ -159,10 +170,12 @@ module.exports = {
             const guildId = interaction.options.get('guild-id')?.value;
             const roleId = interaction.options.get('role-id')?.value
 
+            if (guildId && roleId) {
+                interaction.reply({embeds: [deniedMessage("You cant use both the guild-id and role-id argument at the same time")]});
+                return;
+            }
+
             if (roleId) {
-                const page = interaction.options.get("page")?.value;
-                const guildId = interaction.options.get("guild-id")?.value;
-                const roleId = interaction.options.get("role-id")?.value;
     
                 if (roleId) {
                     const databaseRoleInfo = await statGetRole(roleId);
@@ -193,13 +206,20 @@ module.exports = {
                     //set rest time
                     const mentionDateMs = Date.parse((lastmention)?.toUTCString());
                     const mentionDateSec = mentionDateMs/1000
+
+                    var embedMentionTime;
+                    if (lastmention === null) {
+                        embedMentionTime = inlineCode("Null")
+                    } else {
+                        embedMentionTime = `<t:${mentionDateSec}:f>`
+                    }
     
                     var restTime;
                     if (mentionable === 1) {
-                        restTime = "--:--";
+                        restTime = inlineCode("--:--");
                     } else {
                         if (!lastmention) {
-                            restTime = "--:--";
+                            restTime = inlineCode("--:--");
                         } else {
                             restTime = `<t:${mentionDateSec+timeoutTime*60}:R>`;
                         }
@@ -220,8 +240,8 @@ module.exports = {
                     )
                     .addFields(
                         {name: "Timeout", value: inlineCode(secondsToDhms(timeoutTime*60)), inline: true},
-                        {name: "Last Mention", value: inlineCode(lastmention), inline: true},
-                        {name: "Rest Time", value: inlineCode(restTime), inline: true}
+                        {name: "Last Mention", value: embedMentionTime, inline: true},
+                        {name: "Rest Time", value: restTime, inline: true}
                     )
                     .setTimestamp();
     
