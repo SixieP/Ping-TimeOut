@@ -2,6 +2,7 @@ const { EmbedBuilder, inlineCode } = require("@discordjs/builders");
 
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
+const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
 
 module.exports = {
     name: "check",
@@ -42,7 +43,8 @@ module.exports = {
             const timed = await roleInDatabase(roleId);
             trackingOutput = trackingOutput + inlineCode(timed) + `\n`
 
-            //check if the bot has higher perms
+            var botPermStatus = "";
+            //check if the bot has a higher role
             const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
 
             const botRole = botUser.roles.cache.find(r => r.name === botUsername)
@@ -50,10 +52,17 @@ module.exports = {
             const comparedPos = role[1].comparePositionTo(botRole);
 
             if (comparedPos < 0) {
-                canChangeOutput = canChangeOutput + inlineCode('true') + `\n`;
+                botPermStatus = inlineCode('true') + `\n`;
             } else {
-                canChangeOutput = canChangeOutput + inlineCode('false - bot rank to low') + `\n`;
+                botPermStatus = inlineCode('false - bot rank too low') + `\n`;
             }
+
+            //check if the bot has required perms
+            if (permsCheck(client, guildId).data.color === 13120512) {
+                botPermStatus = inlineCode('false - not enough perms') + `\n`;
+            }
+
+            canChangeOutput = canChangeOutput + botPermStatus;
         }
 
         const embed = new EmbedBuilder()
