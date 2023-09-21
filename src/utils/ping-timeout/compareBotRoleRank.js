@@ -1,4 +1,4 @@
-module.exports = (client, roleId) => {
+module.exports = (client, guildId, roleId) => {
     const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
 
     const botId = client.user.id;
