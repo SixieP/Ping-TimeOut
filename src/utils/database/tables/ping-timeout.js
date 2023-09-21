@@ -1,5 +1,6 @@
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const { logging } = require('../../baseUtils/logging');
 
 module.exports = async () => {
     try {
