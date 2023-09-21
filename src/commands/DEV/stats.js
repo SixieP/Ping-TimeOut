@@ -1,3 +1,11 @@
+/*
+What does this command do?
+
+This command is used to get stats from the bot that the dev can use. Besides that it is also used to check info about guilds and roles incase a bug has been reported.
+
+*/
+
+
 const { PermissionFlagsBits, ApplicationCommandOptionType, EmbedBuilder, inlineCode, Embed } = require("discord.js");
 const registerPublicCommands = require('../../events/ready/02registerPublicCommands');
 const registerTestCommands = require('../../events/ready/03registerTestCommands');
