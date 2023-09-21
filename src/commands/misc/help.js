@@ -33,6 +33,7 @@ module.exports = {
 
     callback: (client, interaction) => {
         const page = interaction.options.get('page')?.value;
+        const guildId = interaction.guildId;
 
         var embed;
         var permsCheckEmbed;
@@ -64,7 +65,7 @@ module.exports = {
 
         if (page === "setup") {
             //permsCheck
-            permsCheckEmbed = permsCheck(client, interaction);
+            permsCheckEmbed = permsCheck(client, guildId);
 
             //setup embed
             embed = new EmbedBuilder()
@@ -85,7 +86,7 @@ module.exports = {
         }
 
         if (page === "permscheck") {
-            embed = permsCheck(client, interaction);
+            embed = permsCheck(client, guildId);
         }
 
         if (!embed) {
