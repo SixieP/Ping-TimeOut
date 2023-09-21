@@ -203,6 +203,15 @@ module.exports = {
                     } else {
                         mentionable = "false"
                     }
+
+                    const inError = databaseRoleInfo[0].inError;
+                    var errorStatus;
+                    if (inError === 1 | inError === "true") {
+                        errorStatus = "True";
+                    } else {
+                        errorStatus = "False";
+                    };
+
     
                     client.guilds.fetch();
                     const guildInfo = client.guilds.cache.get(guildId);
@@ -244,7 +253,9 @@ module.exports = {
                         {name: "Role members", value: inlineCode(roleUsers.length), inline: true}
                     )
                     .addFields(
-                        {name: "Mentionable", value: inlineCode(mentionable), inline: false},
+                        {name: "Mentionable", value: inlineCode(mentionable), inline: true},
+                        {name: "In Error", value: inlineCode(errorStatus), inline: true},
+                        {name: "\n", value: "\n", inline: true},
                     )
                     .addFields(
                         {name: "Timeout", value: inlineCode(secondsToDhms(timeoutTime*60)), inline: true},
