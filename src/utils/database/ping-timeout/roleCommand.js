@@ -35,7 +35,8 @@ async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
         update roles
         set
         timeOutTime = ?,
-        mentionable = ?
+        mentionable = ?,
+        inError = 0
         where
         roleId = ?`,
         [timeoutTime, mentionInt, roleId]);
@@ -69,7 +70,8 @@ async function makeMentionable(roleId, mentionable) {
         await pool.query(`
         update roles
         set
-        mentionable = ?
+        mentionable = ?,
+        inError = 0
         where
         roleId = ?`,
         [mentionInt, roleId]);
