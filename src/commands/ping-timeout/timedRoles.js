@@ -33,8 +33,12 @@ module.exports = {
         var time = "";
         var lastMentionAndRestTime = "";
         var timeout = "";
+        var oldTimeOut = false;
 
         for (const timedRole of timedRoles) {
+            const dateNowMs = Date.now().toString();
+            const dateNowSec = dateNowMs/1000;
+
             const mentionDateMs = Date.parse((timedRole.lastMention)?.toUTCString());
             const mentionDateSec = mentionDateMs/1000
             const mentionable = timedRole.mentionable;
@@ -52,7 +56,11 @@ module.exports = {
                 if (!timedRole.lastMention) {
                     restTime = inlineCode("--:--");
                 } else {
-                    restTime = `<t:${mentionDateSec+timedRole.timeoutTime*60}:R>`;
+                    restTime = `<t:${mentionDateSec+timeOutTime*60}:R>`;
+
+                    if (dateNowSec > mentionDateSec+timeoutSec) {
+                        oldTimeOut = true;
+                    }
                 }
             }
 
@@ -91,6 +99,9 @@ module.exports = {
         if (userPresence?.mobile) {
             embed.data.footer = {text: "It has been detected that you are using a mobile device. This embed may not show up correctly on mobile devices. Consider using discord on a computer"};  
         };
+        if (oldTimeOut) {
+            embed.data.footer = {text: "One of your roles is showing a rest time that is in the past. If this is less than a minute please try again in a bit. If not it means that the bot doesn't have the perms to make that role mentionable again. Use /check to see if that is the case."};  
+        }
 
         interaction.reply({embeds: [embed], ephemeral: true})
     },
