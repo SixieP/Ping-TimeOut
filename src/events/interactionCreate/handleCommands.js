@@ -2,6 +2,7 @@ const { inlineCode, underscore, Collection } = require('discord.js');
 const { devs, testGuild} = require('../../../config.json');
 const { deniedMessage, warnMessage } = require('../../utils/baseUtils/defaultEmbeds');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
+const { logging } = require('../../utils/baseUtils/logging');
 
 
 module.exports = async (client, interaction) => {
@@ -68,10 +69,7 @@ module.exports = async (client, interaction) => {
                     embeds: [embed],
                     ephemeral: true,
                 });
-                console.log(`
-                WARNING | A dev only command was used by a non-authorized user.
-                WARNING | Guild: ${interaction.guild.name} (${interaction.guildId})
-                WARNING | User: ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id})`);
+                logging("info", `\n| A dev only command was used by a non-authorized user.\n| Guild: ${interaction.guild.name} (${interaction.guildId})\n| User: ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}))\n`)
                 return;
             }
         }
@@ -112,6 +110,6 @@ module.exports = async (client, interaction) => {
         } 
         await commandObject.callback(client, interaction);
     } catch (error) {
-        console.log(`There was an error using this command: ${error}`);
+        logging("error", error, "command handler")
     }
 };
