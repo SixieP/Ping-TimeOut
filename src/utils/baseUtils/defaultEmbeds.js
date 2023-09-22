@@ -1,5 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
-
+const { EmbedBuilder, inlineCode, bold, italic } = require("discord.js");
 
 function deniedMessage(description, title) {
 
@@ -35,7 +34,25 @@ function aprovedMessage(description, title) {
     return doneEmbed;
 }
 
+function warnMessage(description, title) {
+
+    var warnEmbed;
+    if (title) {
+        warnEmbed = new EmbedBuilder()
+        .setColor(0xf0b616)
+        .setTitle(title)
+        .setDescription(`:warning: ${description}`);
+    } else {
+        warnEmbed = new EmbedBuilder()
+        .setColor(0xf0b616)
+        .setDescription(`:warning: ${description}`);
+    }
+
+    return warnEmbed;
+}
+
 module.exports = {
     deniedMessage,
     aprovedMessage,
+    warnMessage,
 };

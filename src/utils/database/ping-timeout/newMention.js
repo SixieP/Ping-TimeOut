@@ -19,7 +19,7 @@ async function updateLastMention (roleId, lastMention, mentionable) {
         where
         roleId = ?`, [lastMention, mentionInt, roleId ])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/newMention.js/updateLastMention) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/newMention.js/updateLastMention");
         return "error";
     }
 }

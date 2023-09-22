@@ -2,7 +2,7 @@
 
 Do you have a freely pingable role that everyone can ping that is regally being spammed?
 
-Then this bot is for you! [Click here](https://discord.com/api/oauth2/authorize?client_id=1142452590685200565&permissions=275213716480&scope=bot%20applications.commands) to invite the bot to your server!
+Then this bot is for you!
 
 With this bot you can add a timer to specific roles so they can only be pinged every X amount of time.
 
@@ -64,12 +64,10 @@ _The bot can't manage roles that have a higher position than the bot itself. Mak
 #### Need help?
 
 First try the bots _/help_ command. Hopefully that helps you on your way.
-If you still need help after using and reading the _/help_ command feel free to ask for it in the [support server](https://sixie.xyz/sixie-discord)!
+If you still need help after using and reading the _/help_ command feel free to ask for it in the support server!
 
 ---
 
 __This bot is online 24/7 and all commands are free to use.__
 <br>
-<sub>This code is distrubuted under the GNU Affero General Public License v3.0</sub>
-<br><br>
 <sup>Disclaimer: This bot has similar features as the ping timer bot. However because of its (at the time of writing) low up-time I decided to make a similar bot that I want to share with others </sup>

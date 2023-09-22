@@ -2,6 +2,7 @@ const { EmbedBuilder, inlineCode } = require("@discordjs/builders");
 
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
+const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
 
 module.exports = {
     name: "check",
@@ -16,11 +17,15 @@ module.exports = {
         const guildId = interaction.guildId;
         const roles = client.guilds.cache.get(guildId).roles.cache;
 
+        const botId = client.user.id;
+        const botUsername = client.user.username
+
         const everyoneRole = client.guilds.cache.get(guildId).roles.everyone
         const everyoneId = everyoneRole.id
 
         var roleOutput = "";
         var trackingOutput = ""
+        var canChangeOutput = "";
         for (const role of roles) {
             if(role[1].id === everyoneId) {
                 if (role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) {
@@ -37,15 +42,46 @@ module.exports = {
             //check if the role already is being timed
             const timed = await roleInDatabase(roleId);
             trackingOutput = trackingOutput + inlineCode(timed) + `\n`
+
+            var botPermStatus = "";
+            //check if the bot has a higher role
+            const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
+
+            const botRole = botUser.roles.cache.find(r => r.name === botUsername)
+
+            const comparedPos = role[1].comparePositionTo(botRole);
+
+            if (comparedPos < 0) {
+                botPermStatus = inlineCode('true') + `\n`;
+            } else {
+                botPermStatus = inlineCode('false - bot rank too low') + `\n`;
+            }
+
+            //check if the bot has required perms
+            if (permsCheck(client, guildId).data.color === 13120512) {
+                botPermStatus = inlineCode('false - not enough perms') + `\n`;
+            }
+
+            canChangeOutput = canChangeOutput + botPermStatus;
         }
 
         const embed = new EmbedBuilder()
         .setTitle("Available roles")
         .setFields(
             {name: 'Role(s)', value: roleOutput, inline: true},
-            {name: 'Timed', value: trackingOutput, inline: true}
+            {name: 'Timed Role', value: trackingOutput, inline: true},
+            {name: 'Bot Can Manage', value: canChangeOutput, inline: true},
         )
         .setTimestamp();
+
+        client.guilds.fetch();
+        const guild = client.guilds.cache.get(guildId);
+        guild.members.fetch();
+        const user = guild.members.cache.get(interaction.user.id)
+        const userPresence = user.presence?.clientStatus;
+        if (userPresence?.mobile) {
+            embed.data.footer = {text: "It has been detected that you are using a mobile device. This embed may not show up correctly on your device. Consider using discord on a computer"};  
+        };
 
         interaction.reply({embeds: [embed], ephemeral: true});
     },

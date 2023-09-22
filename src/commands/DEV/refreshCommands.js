@@ -1,6 +1,8 @@
 const { PermissionFlagsBits, ApplicationCommandOptionType } = require("discord.js");
 const registerPublicCommands = require('../../events/ready/02registerPublicCommands');
 const registerTestCommands = require('../../events/ready/03registerTestCommands');
+const { logging } = require("../../utils/baseUtils/logging");
+const { aprovedMessage } = require("../../utils/baseUtils/defaultEmbeds");
 
 module.exports = {
     name: "dev-reload_commands",
@@ -32,18 +34,18 @@ module.exports = {
     callback: async (client, interaction) => {
         const commandName = interaction.options.get('command-channel').value;
         if (commandName === "public") {
-                    console.log("RELOAD-command | START reloading PUBLIC commands");
-                    await registerPublicCommands(client);
-                    console.log("RELOAD-command | END reloading PUBLIC commands");
-            
-                    interaction.reply({content: "Successfully reloaded the 'public' commands!", ephemeral: true});
+            logging("dev", "Start reloading commands", "pub_command")
+            await registerPublicCommands(client);
+            logging("dev", "End reloading commands", "pub_command")
+    
+            interaction.reply({embeds: [aprovedMessage("Successfully reloaded the 'public' commands!")], ephemeral: true});
         }
         if (commandName === "test") {
-            console.log("RELOAD-command | START reloading TEST commands");
+            logging("dev", "Start reloading commands", "priv_command")
             await registerTestCommands(client);
-            console.log("RELOAD-command | END reloading TEST commands");
+            logging("dev", "Start reloading commands", "priv_command")
     
-            interaction.reply({content: "Successfully reloaded the 'test' commands!", ephemeral: true});
+            interaction.reply({embeds: [aprovedMessage("Successfully reloaded the 'test' commands!")], ephemeral: true});
         }
     },
 };

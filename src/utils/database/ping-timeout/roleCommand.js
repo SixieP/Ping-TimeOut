@@ -3,7 +3,7 @@ const pool = connectDatabase();
 
 async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
     var mentionInt;
-    if (mentionable === true) {
+    if (mentionable === true | mentionable === 1) {
         mentionInt = 1;
     } else {
         mentionInt = 0;
@@ -17,14 +17,14 @@ async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
         (?, ?, ?, ?)`,
         [roleId, guildId, timeoutTime, mentionInt])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/newTimeOutRole) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/newTimeOutRole");
         return "error";
     }
 }
 
 async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
     var mentionInt;
-    if (mentionable === true) {
+    if (mentionable === true | mentionable === 1) {
         mentionInt = 1;
     } else {
         mentionInt = 0;
@@ -35,12 +35,13 @@ async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
         update roles
         set
         timeOutTime = ?,
-        mentionable = ?
+        mentionable = ?,
+        inError = 0
         where
         roleId = ?`,
         [timeoutTime, mentionInt, roleId]);
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/updateTimeoutTime) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
         return "error";
     }
 }
@@ -52,8 +53,31 @@ async function removeTimeoutRole(roleId) {
         where
         roleId = ?`, [roleId])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/roleCommand.js/removeTimeoutRole) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/roleCommand.js/removeTimeoutRole");
         return "error"
+    }
+}
+
+async function makeMentionable(roleId, mentionable) {
+    var mentionInt;
+    if (mentionable === true | mentionable === 1) {
+        mentionInt = 1;
+    } else {
+        mentionInt = 0;
+    }
+
+    try {
+        await pool.query(`
+        update roles
+        set
+        mentionable = ?,
+        inError = 0
+        where
+        roleId = ?`,
+        [mentionInt, roleId]);
+    } catch (error) {
+        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
+        return "error";
     }
 }
 
@@ -62,4 +86,5 @@ module.exports = {
     newTimeOutRole,
     updateTimeoutTime,
     removeTimeoutRole,
+    makeMentionable,
 };

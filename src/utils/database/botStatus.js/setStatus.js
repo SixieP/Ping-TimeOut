@@ -1,3 +1,4 @@
+const { logging } = require('../../baseUtils/logging');
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 
@@ -8,7 +9,7 @@ async function getAllRoles() {
 
         return roles;
     } catch (error) {
-        console.log(`Error with database-query (botStatus/setStatus.js/getAllRoles) | Error: ${error}`);
+        logging("error", error, "database/botStatus/setStatus.js/getAllRoles");
         return "error";
     }
 }

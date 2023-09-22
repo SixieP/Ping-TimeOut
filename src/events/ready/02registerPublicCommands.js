@@ -1,10 +1,11 @@
 const areCommandsDifferent = require('../../utils/baseUtils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/baseUtils/getApplicationCommands');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
+const { logging } = require('../../utils/baseUtils/logging');
 
 module.exports = async (client) => {
     try {
-        console.log('STARTUP-command | BEGIN public command check')
+        logging("info", `Begin command check`, "pub_command_reg")
         const localCommands = getLocalCommands();
         const applicationCommands = await getApplicationCommands(
             client
@@ -21,13 +22,13 @@ module.exports = async (client) => {
             if (existingCommand) {
                 if (localCommand.deleted) {
                     await applicationCommands.delete(existingCommand.id);
-                    console.log(`PUBLIC-COMMAND | The command ${name} has been deleted cause it is set to deleted`);
+                    logging("info", `The command ${name} has been deleted cause it is set to deleted`, "pub_command_reg")
                     continue;
                 }
 
                 if (localCommand.testCommand) {
                     await applicationCommands.delete(existingCommand.id);
-                    console.log(`PUBLIC-COMMAND | The command ${name} has been deleted from the guild commands cause it is set to test`);
+                    logging("info", `The command ${name} has been deleted from the guild commands cause it is set to test`, "pub_command_reg")
                     continue;
                 }
 
@@ -37,16 +38,16 @@ module.exports = async (client) => {
                         options,
                         defaultMemberPermissions,
                     });
-                    console.log(`PUBLIC-COMMAND | The public command ${name} has been changed.`);
+                    logging("info", `The public command ${name} has been changed.`, "pub_command_reg")
                 }
             } else {
                 if (localCommand.deleted) {
-                    console.log(`PUBLIC-COMMAND | Skipping registering public command ${name} cause it is set to deleted`)
+                    logging("info", `Skipping registering public command ${name} cause it is set to deleted`, "pub_command_reg")
                     continue;
                 }
 
                 if (localCommand.testCommand) {
-                    console.log(`PUBLIC-COMMAND | Skipping registering "${name}" cause it is not a public command`)
+                    logging("info", `Skipping registering "${name}" cause it is not a public command`, "pub_command_reg")
                     continue;
                 }
 
@@ -57,11 +58,11 @@ module.exports = async (client) => {
                     defaultMemberPermissions,
                 });
 
-                console.log(`PUBLIC-COMMAND | The public command ${name} has been registered.`);
+                logging("info", `The public command ${name} has been registered.`, "pub_command_reg")
             }
         }
-        console.log('STARTUP-command | END public command check')
+        logging("info", `End command check`, "pub_command_reg")
     } catch (error) {
-        console.error(`There was a error registering a public command | Error: ${error}`)
+        logging("error", `There was a error registering a public command: ${error}`, "pub_command_reg")
     }
 };

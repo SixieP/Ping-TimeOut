@@ -21,7 +21,7 @@ async function getNotMentionableRoles(guildId) {
             return roles;
         }
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/makeMentionable.js/getNotMentionableRoles) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/makeMentionable.js/getNotMentionableRoles")
         return "error";
     }
 }
@@ -31,11 +31,32 @@ async function updateSetMentionable (roleId) {
         await pool.query(`
         update roles
         set 
-        mentionable = 1
+        mentionable = 1,
+        inError = 0
         where
         roleId = ?`, [ roleId ])
     } catch (error) {
-        console.log(`Error with database-query (ping-timeout/makeMentionable.js/updateSetMentionable) | Error: ${error}`);
+        logging("error", error, "database/ping-timeout/makeMentionable.js/updateSetMentionable")
+        return "error";
+    }
+}
+
+async function databaseRoleErrorState (roleId, errorState = true) {
+    var setErrorState;
+    if (errorState === false | errorState === 0) {
+        setErrorState = 0
+    } else {
+        setErrorState = 1
+    }
+    try {
+        await pool.query(`
+        update roles
+        set 
+        inError = ?
+        where
+        roleId = ?`, [ setErrorState, roleId ])
+    } catch (error) {
+        logging("error", error, "database/ping-timeout/makeMentionable.js/setInError")
         return "error";
     }
 }
@@ -44,4 +65,5 @@ async function updateSetMentionable (roleId) {
 module.exports = { 
     getNotMentionableRoles,
     updateSetMentionable,
+    databaseRoleErrorState,
 };
