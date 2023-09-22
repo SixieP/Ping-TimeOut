@@ -1,3 +1,4 @@
+const { logging } = require('./utils/baseUtils/logging');
 //send a special log message that happens when the bot starts
 logging("start");
 
@@ -17,7 +18,6 @@ const client = new Client({
 //START check database connection
 const { mysqlHost, mysqlPort, mysqlUser, mysqlPass, mysqlDatabase } = require('../config.json');
 const mysql = require('mysql2');
-const { logging } = require('./utils/baseUtils/logging');
 const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
 const pool = mysql.createPool({
