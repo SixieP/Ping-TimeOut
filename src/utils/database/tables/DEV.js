@@ -6,8 +6,9 @@ module.exports = async () => {
     try {
         const [result] = await pool.query(`
         create table if not exists bugReportBlacklist (
-            userId varchar(40),
-            blacklistDate datetime
+            userId varchar(40) not null primary key,
+            blacklistDate datetime not null,
+            blacklistReason varchar(1000)
         );
         `);
         if (result.warningStatus === 1) return;
