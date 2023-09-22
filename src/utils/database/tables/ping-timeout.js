@@ -14,10 +14,24 @@ module.exports = async () => {
             inError boolean
             )
         `);
-        if (result.warningStatus === 1) return;
-        logging("info", 'Created the non existing table "roles"', "database/tables/ping-timeout.js");
+        if (result.warningStatus === 0) {
+            logging("info", 'Created the non existing table "roles"', "database/tables/ping-timeout.js");
+        }
 
     } catch (error) {
         logging("error", `There was an error creating a non-existing table "roles": ${error}`, "database/tables/ping-timeout.js");
+    }
+
+    try {
+        const [result] = await pool.query(`
+        alter table roles
+        add inError boolean;
+        `);
+        logging("info", 'Created the non existing column "inError" in table "roles"', "database/tables/ping-timeout.js");
+
+    } catch (error) {
+        if (error.code !== "ER_DUP_FIELDNAME") {
+            logging("error", `There was an error creating a non-existing table "roles": ${error}`, "database/tables/ping-timeout.js");
+        }
     }
 }
