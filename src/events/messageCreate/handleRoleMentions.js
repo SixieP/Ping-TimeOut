@@ -3,6 +3,7 @@ const { updateLastMention } = require('../../utils/database/ping-timeout/newMent
 
 const {logging} = require('../../utils/baseUtils/logging');
 const { PermissionFlagsBits } = require('discord.js');
+const noPermsMessage = require('../../utils/ping-timeout/noPermsMessage');
 
 module.exports = async (client, message) => {
     if(message.author.bot) return;
@@ -40,11 +41,19 @@ module.exports = async (client, message) => {
             //make the role not mentionable
             role = await client.guilds.cache.get(guildId).roles.fetch(roleId).catch(error => {
                 logging("handleRoleMentions.js", error, "error", true)
+                return;
             });
 
             if (role) {
                 role.setMentionable(false, "Role got mentioned").catch(error => {
-                    console.log("handleRoleMentions.js", error)
+                    if (error.code === 50013) {
+                        logging("INFO", error, "handleRoleMentions.js/setMentionable", true);
+                        noPermsMessage(client, roleId, guildId, message);
+                        return;
+                    } else {
+                        logging("ERROR", error, "handleRoleMentions.js/setMentionable");
+                        return;
+                    }
                 });
 
                 logging("handleRoleMentions.js", `${guildId} | role got mentioned and has been made publicly unmentionable`, "unmentionable", true)

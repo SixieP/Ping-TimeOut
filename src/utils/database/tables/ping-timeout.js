@@ -10,7 +10,8 @@ module.exports = async () => {
             guildId VARCHAR(32) not null,
             lastMention DATETIME null,
             timeoutTime INT not null,
-            mentionable BOOLEAN not null DEFAULT false
+            mentionable BOOLEAN not null DEFAULT false,
+            inError boolean
             )
         `);
         if (result.warningStatus === 1) return;

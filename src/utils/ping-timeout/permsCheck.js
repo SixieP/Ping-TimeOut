@@ -1,10 +1,10 @@
 const { EmbedBuilder, inlineCode, bold, InviteTargetType, italic } = require("discord.js");
 
-function permsCheck(client, interaction) {
+function permsCheck(client, guildId) {
     //permscheck - fullPerms: 277294107648
     const botId = client.user.id;
 
-    const botUser = client.guilds.cache.get(interaction.guildId).members.cache.get(botId);
+    const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
 
     const hasRequiredPerms = botUser.permissions.has(277294107648n);
 
