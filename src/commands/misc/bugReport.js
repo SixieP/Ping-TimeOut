@@ -1,5 +1,6 @@
-const { EmbedBuilder, inlineCode, Embed, ApplicationCommand, ApplicationCommandOptionType, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, WebhookClient} = require('discord.js');
-const { aprovedMessage } = require('../../utils/baseUtils/defaultEmbeds');
+const { EmbedBuilder, inlineCode, Embed, ApplicationCommand, ApplicationCommandOptionType, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, WebhookClient, bold, codeBlock} = require('discord.js');
+const { aprovedMessage, deniedMessage } = require('../../utils/baseUtils/defaultEmbeds');
+const { blacklistedUser } = require('../../utils/database/DEV/bugReportBlacklist');
 module.exports = {
     name: "bug-report",
     description: 'Report a bug in the bot',
@@ -10,6 +11,22 @@ module.exports = {
     // testCommand: Boolean,
 
     callback: async (client, interaction) => {
+        const userId = interaction.user.id;
+
+        const checkUser = await blacklistedUser(userId);
+
+        if (checkUser?.userId === userId) {
+            if (checkUser?.blacklistReason) {
+                interaction.reply({embeds: [deniedMessage(`You can't submit a bug-report due to you being blacklisted!\n
+                ${bold("Reason:")}
+                ${codeBlock(checkUser.blacklistReason)}`)], ephemeral: true});
+            } else {
+                interaction.reply({embeds: [deniedMessage(`You can't submit a bug-report due to you being blacklisted!`)], ephemeral: true});
+            }
+
+            return;
+        };
+
         const reportModal = new ModalBuilder()
             .setCustomId("bug-report")
             .setTitle("Bug Report Form");
