@@ -36,8 +36,6 @@ module.exports = async (client, message) => {
         if (inDatabase === true) {
             const nowUTC = new Date();
 
-            updateLastMention(roleId, nowUTC, "false");
-
             //make the role not mentionable
             role = await client.guilds.cache.get(guildId).roles.fetch(roleId).catch(error => {
                 logging("handleRoleMentions.js", error, "error", true)
@@ -45,7 +43,7 @@ module.exports = async (client, message) => {
             });
 
             if (role) {
-                role.setMentionable(false, "Role got mentioned").catch(error => {
+                const setMentionRes = await role.setMentionable(false, "Role got mentioned").catch(error => {
                     if (error.code === 50013) {
                         logging("INFO", error, "handleRoleMentions.js/setMentionable", true);
                         noPermsMessage(client, roleId, guildId, message);
@@ -55,11 +53,17 @@ module.exports = async (client, message) => {
                         return;
                     }
                 });
+                if (!setMentionRes) return;
+
+                //update database query
+                updateLastMention(roleId, nowUTC, "false");
 
                 logging("handleRoleMentions.js", `${guildId} | role got mentioned and has been made publicly unmentionable`, "unmentionable", true)
             } else {
                 logging("handleRoleMentions.js", `${guildId} | role got mentioned and should have made not mentionable but that didnt happen`, "unmentionable", true)
             }
+
+
         }
     }
 
