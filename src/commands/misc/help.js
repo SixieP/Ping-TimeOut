@@ -59,6 +59,8 @@ module.exports = {
             ${inlineCode("/help")} Gives the default help page.
             ${inlineCode("/help 1")} Gives help page 1 (default).
 
+            ${inlineCode("/bug-report")} Submit a bug report.
+
             *For other help pages than default use the optional page on the help command*
             `)
         }
