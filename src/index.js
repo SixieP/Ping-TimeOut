@@ -1,4 +1,7 @@
-const { Client, IntentsBitField } = require('discord.js');
+//send a special log message that happens when the bot starts
+logging("start");
+
+const { Client, IntentsBitField, Collection } = require('discord.js');
 const { botToken } = require('../config.json');
 
 const eventHandler = require('./handlers/eventHandler');
@@ -11,7 +14,6 @@ const client = new Client({
         IntentsBitField.Flags.GuildMembers,
     ]
 });
-
 //START check database connection
 const { mysqlHost, mysqlPort, mysqlUser, mysqlPass, mysqlDatabase } = require('../config.json');
 const mysql = require('mysql2');
@@ -25,9 +27,6 @@ const pool = mysql.createPool({
     password: mysqlPass,
     database: mysqlDatabase
 });
-
-logging("start");
-
 pool.query(`show databases`, async function (err) {
     if (err) {
         logging("error", err, "database-startup")
@@ -39,6 +38,10 @@ pool.query(`show databases`, async function (err) {
     logging("info", `Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup-database')
 })
 //END check database connection
+
+//create a collection that is used for command cooldowns
+client.cooldowns = new Collection();
+
 
 eventHandler(client)
 client.login(botToken);
