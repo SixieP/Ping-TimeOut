@@ -58,7 +58,7 @@ module.exports = {
         const bugEmbed = new EmbedBuilder()
         .setTitle('Bug Report')
         .setAuthor({name: globalName, iconURL: userAvatar})
-        .setDescription(bugReportMessage)
+        .setDescription(codeBlock(bugReportMessage))
         .setFooter({text: `GuildId: ${guildId}`})
         .setTimestamp();
 
