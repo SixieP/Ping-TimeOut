@@ -6,7 +6,7 @@ const pool = connectDatabase();
 async function addUserToBlacklist(userId, date, reason) {
     try {
         const [ result ] = await pool.query(`
-        insert into bugreportblacklist
+        insert into bugReportBlacklist
         (userId, blacklistDate, blacklistReason)
         values
         (?, ?, ?)
@@ -24,7 +24,7 @@ async function addUserToBlacklist(userId, date, reason) {
 async function removeUserFromBlacklist(userId) {
     try {
         const [ result ] = await pool.query(`
-        delete from bugreportblacklist
+        delete from bugReportBlacklist
         where
         userId = ?
         `,
@@ -41,7 +41,7 @@ async function removeUserFromBlacklist(userId) {
 async function blacklistedUser(userId) {
     try {
         const [ userInfo ] = await pool.query(`
-        select * from bugreportblacklist
+        select * from bugReportBlacklist
         where
         userId = ?;
         `,
