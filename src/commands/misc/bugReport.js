@@ -51,13 +51,14 @@ module.exports = {
 
         const userInfo = interaction.user;
         const globalName = userInfo.globalName;
+        const userId = userInfo.id;
         const userAvatar = userInfo.avatarURL();
 
         const guildId = interaction.guildId;
 
         const bugEmbed = new EmbedBuilder()
         .setTitle('Bug Report')
-        .setAuthor({name: globalName, iconURL: userAvatar})
+        .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
         .setDescription(codeBlock(bugReportMessage))
         .setFooter({text: `GuildId: ${guildId}`})
         .setTimestamp();
