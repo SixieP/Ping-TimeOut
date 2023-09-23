@@ -10,9 +10,16 @@ const { aprovedMessage, deniedMessage } = require("../baseUtils/defaultEmbeds");
 module.exports = async (client, roleId, guildId, interaction) => {
     //get info about the guild and role
     client.guilds.fetch();
-    const guildInfo = client.guilds.cache.get(guildId);
+    const guildInfo = client.guilds.cache.get(guildId).catch(error => {
+        logging("error", error, "noPermsMessage.js/fetchGuildinf")
+    });
 
     const systemChannelId = guildInfo.systemChannelId;
+
+    if (!systemChannelId) {
+        logging("noPermsMesage.js", `This guild (${guildId}) has no system channel`, "noSysChan", true);
+        return;
+    }
     
     var errorEmbed;
     if (interaction) {
@@ -45,7 +52,9 @@ module.exports = async (client, roleId, guildId, interaction) => {
     }
 
     guildInfo.channels.fetch();
-    const systemChannelInfo = guildInfo.channels.cache.get(systemChannelId);
+    const systemChannelInfo = guildInfo.channels.cache.get(systemChannelId).catch(error => {
+        logging("error", error, "noPermsMessage.js/fetchSysChan")
+    });
 
     const permsEmbed = await permsCheck(client, guildId);
 
