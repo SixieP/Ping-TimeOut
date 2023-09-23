@@ -1,5 +1,5 @@
 const { logging } = require("../baseUtils/logging");
-const { getNotMentionableRoles, databaseRoleErrorState } = require("../database/ping-timeout/makeMentionable");
+const { getNotMentionableRoles, databaseRoleErrorState, updateSetMentionable } = require("../database/ping-timeout/makeMentionable");
 const noPermsMessage = require("./noPermsMessage");
 
 module.exports = async (client) => {
@@ -21,6 +21,8 @@ module.exports = async (client) => {
             try {
                 const roleData = client.guilds.cache.get(guildId).roles.cache.get(roleId)
                 await roleData.setMentionable(true, 'Timeout done');
+
+                updateSetMentionable(roleId);
             } catch (error) {
                 if (error.code === 50013) {
                     databaseRoleErrorState(roleId, true);
