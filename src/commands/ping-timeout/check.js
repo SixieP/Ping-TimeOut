@@ -3,6 +3,8 @@ const { EmbedBuilder, inlineCode } = require("@discordjs/builders");
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
 const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
+const { deniedMessage } = require('../../utils/baseUtils/defaultEmbeds');
+const { logging } = require('../../utils/baseUtils/logging')
 
 module.exports = {
     name: "check",
@@ -50,8 +52,14 @@ module.exports = {
             //check if the bot has a higher role
             const botUser = await client.guilds.cache.get(guildId).members.cache.get(botId);
 
-            const botRole = await botUser.roles.cache.find(r => r.name === botUsername)
+            const botRole = await botUser.roles.cache.find(r => r.tags.botId === botId);
 
+            if (!botRole) {
+            interaction.reply({embeds: [deniedMessage("Error! Please report this as a bug")]});
+            logging("error", `Could't not find managed role. GuildID: ${guildId}`, "check.js/botrole");
+            return;
+            }
+            
             const comparedPos = role[1].comparePositionTo(botRole);
 
             if (comparedPos < 0) {
