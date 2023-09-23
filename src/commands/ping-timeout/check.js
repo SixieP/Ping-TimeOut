@@ -15,12 +15,15 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const guildId = interaction.guildId;
-        const roles = client.guilds.cache.get(guildId).roles.cache;
+
+        await client.guilds.fetch();
+        await client.guilds.cache.get(guildId).roles.fetch()
+        const roles = await client.guilds.cache.get(guildId).roles.cache;
 
         const botId = client.user.id;
         const botUsername = client.user.username
 
-        const everyoneRole = client.guilds.cache.get(guildId).roles.everyone
+        const everyoneRole = await client.guilds.cache.get(guildId).roles.everyone
         const everyoneId = everyoneRole.id
 
         var roleOutput = "";
@@ -45,9 +48,9 @@ module.exports = {
 
             var botPermStatus = "";
             //check if the bot has a higher role
-            const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
+            const botUser = await client.guilds.cache.get(guildId).members.cache.get(botId);
 
-            const botRole = botUser.roles.cache.find(r => r.name === botUsername)
+            const botRole = await botUser.roles.cache.find(r => r.name === botUsername)
 
             const comparedPos = role[1].comparePositionTo(botRole);
 
@@ -74,10 +77,10 @@ module.exports = {
         )
         .setTimestamp();
 
-        client.guilds.fetch();
-        const guild = client.guilds.cache.get(guildId);
-        guild.members.fetch();
-        const user = guild.members.cache.get(interaction.user.id)
+        await client.guilds.fetch();
+        const guild = await client.guilds.cache.get(guildId);
+        await guild.members.fetch();
+        const user = await guild.members.cache.get(interaction.user.id)
         const userPresence = user.presence?.clientStatus;
         if (userPresence?.mobile) {
             embed.data.footer = {text: "It has been detected that you are using a mobile device. This embed may not show up correctly on your device. Consider using discord on a computer"};  
