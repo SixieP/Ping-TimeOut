@@ -1,6 +1,6 @@
 ## Ping TimeOut
 
-Do you have a freely pingable role that everyone can ping that is regally being spammed?
+Do you have a freely pingable role that everyone can ping that is regularly being spammed?
 
 Then this bot is for you! [Click here](https://discord.com/api/oauth2/authorize?client_id=1142452590685200565&permissions=275213716480&scope=bot%20applications.commands) to invite the bot to your server!
 

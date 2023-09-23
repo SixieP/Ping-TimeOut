@@ -1,13 +1,4 @@
 ## Ping TimeOut
-
-Do you have a freely pingable role that everyone can ping that is regally being spammed?
-
-Then this bot is for you!
-
-With this bot you can add a timer to specific roles so they can only be pinged every X amount of time.
-
----
-
 #### Setup
 **Important**: You need to have the __Administrator__ permission for most of the commands. (Administrators can change slash command permissions under the intergration settings)
             
