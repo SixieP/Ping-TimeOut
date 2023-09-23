@@ -89,6 +89,18 @@ module.exports = {
                 const guildMemberCount = guild.memberCount;
                 const timedRoles = await statGetRolesByGuild(guild.id);
 
+                const guildOwnerId = guild.ownerId;
+
+                await client.users.fetch(guildOwnerId);
+                const guildOwnerInfo = client.users.cache.get(guildOwnerId);
+
+                var guildOwnerName
+                if (!guildOwnerInfo) {
+                    guildOwnerEmbedInfo = `(${guildOwnerId})`;
+                } else {
+                    guildOwnerEmbedInfo = `${guildOwnerInfo.globalName} (${guildOwnerId})`;
+                }
+
                 
                 const embed = new EmbedBuilder()
                 .setTitle('GuildInfo')
@@ -102,6 +114,11 @@ module.exports = {
                     {
                         name: "Server ID",
                         value: inlineCode(guildId),
+                        inline: true,
+                    },
+                    {
+                        name: "Owner",
+                        value: inlineCode(guildOwnerEmbedInfo),
                         inline: true,
                     },
                     {
