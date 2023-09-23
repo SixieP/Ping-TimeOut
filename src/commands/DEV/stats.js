@@ -163,7 +163,11 @@ module.exports = {
                         const guild = client.guilds.cache.get(allGuildIds[guildObjectNr]);
                         const timedRoles = await statGetRolesByGuild(guild.id);
 
-                        guildIds = guildIds + `${inlineCode(guild.name)} (${(inlineCode(guild.id))}) \n`;
+                        if (guild.name.length > 22) {
+                            guildIds = guildIds + `${inlineCode(guild.name.substring(0, 22) + `...`)} (${(inlineCode(guild.id))}) \n`;
+                        } else {
+                            guildIds = guildIds + `${inlineCode(guild.name.substring(0, 25))} (${(inlineCode(guild.id))}) \n`;
+                        }
                         guildMembers = guildMembers + `${inlineCode(guild.memberCount)} \n`;
                         guildTimedRoles = guildTimedRoles + `${inlineCode(Object.keys(timedRoles).length)} \n`;
                     }
