@@ -111,5 +111,11 @@ module.exports = async (client, interaction) => {
         await commandObject.callback(client, interaction);
     } catch (error) {
         logging("error", error, "command handler")
+
+        if (interaction.isRepliable()) {
+            interaction.reply({embeds: [deniedMessage("There was an error using this command :/. Please try again later and/or create a bug-report.")], ephemeral: true})
+        } else {
+            interaction.editReply({embeds: [deniedMessage("There was an error using this command :/. Please try again later and/or create a bug-report.")], ephemeral: true})
+        }
     }
 };
