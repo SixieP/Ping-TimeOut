@@ -215,7 +215,7 @@ module.exports = {
                 if (roleId) {
                     const databaseRoleInfo = await statGetRole(roleId);
     
-                    if (!databaseRoleInfo) {
+                    if (!databaseRoleInfo[0]) {
                         interaction.reply({embeds: [deniedMessage("This role doesnt have a entry into the database")], ephemeral: true});
                         return;
                     }
@@ -399,8 +399,17 @@ async function rolesList (client, title, roles, page) {
             const guildData = client.guilds.cache.get(roles[roleObjectNr].guildId);
             const roleData = guildData.roles.cache.get(roles[roleObjectNr].roleId);
 
-            roleNames = roleNames + `${inlineCode(roleData.name)} (${inlineCode(roleData.id)}) \n`;
-            roleGuilds = roleGuilds + `${inlineCode(guildData.name)} (${inlineCode(guildData.id)}) \n`;
+            if (roleData.name.length > 23) {
+                roleNames = roleNames + `${inlineCode(roleData.name.substring(0, 20)+ `...`)} (${inlineCode(roleData.id)}) \n`;
+            } else {
+                roleNames = roleNames + `${inlineCode(roleData.name.substring(0, 23))} (${inlineCode(roleData.id)}) \n`;
+            }
+
+            if (guildData.name.length > 15) {
+                roleGuilds = roleGuilds + `${inlineCode(guildData.name.substring(0, 12)+ `...`)} (${inlineCode(guildData.id)}) \n`;
+            } else {
+                roleGuilds = roleGuilds + `${inlineCode(guildData.name.substring(0, 15))} (${inlineCode(guildData.id)}) \n`;
+            }
         };
     };
 
