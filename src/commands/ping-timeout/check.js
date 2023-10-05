@@ -56,7 +56,7 @@ module.exports = {
 
             if (!botRole) {
             interaction.reply({embeds: [deniedMessage("Error! Please report this as a bug")]});
-            logging("error", `Could't not find managed role. GuildID: ${guildId}`, "check.js/botrole");
+            logging("error", `Could't find managed role. GuildID: ${guildId}`, "check.js/botrole");
             return;
             }
             

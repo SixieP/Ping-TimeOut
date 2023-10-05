@@ -14,9 +14,10 @@
 
 ---
 #### Notes/Good to know
-- When you add the bot/add a timer/edit a timer the bot checks if the @everyone role can mention @everyone. If that is the case the bot will set that permission to false. This is to make sure that you don't get confused why people can still ping certain roles when they shouldn't be pingable. (I recommend never the mention @everyone permission on non-staff roles!)
+- When you add the bot/add a timer/edit a timer the bot checks if the @everyone role can mention @everyone. If that is the case the bot will set that permission to false. This is to make sure that you don't get confused why people can still ping certain roles when they shouldn't be pingable.
 - All commands (except /ping and /roles) need the administrator perm by default! You can change it in the slash command permission manager.
 - The bot checks every minute if a role should be pingable again. So sometimes you need to wait for a short bit.
+- People with the mention @everyone permission don't trigger the bots ping detection. So if they ping a role it will stay pingable by everyone.
 
 ---
 

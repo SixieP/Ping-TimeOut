@@ -12,6 +12,7 @@ const registerTestCommands = require('../../events/ready/03registerTestCommands'
 const { deniedMessage } = require(`../../utils/baseUtils/defaultEmbeds`);
 const { statGetRole, statGetRolesByGuild, statGetAllRoles } = require("../../utils/database/DEV/stats");
 const { timeout } = require("nodemon/lib/config");
+const { getAllRoles } = require("../../utils/database/botStatus.js/setStatus");
 
 module.exports = {
     name: "dev-stats",
@@ -56,6 +57,11 @@ module.exports = {
                     type: ApplicationCommandOptionType.String,
                 },
             ],
+        },
+        {
+            name: "global",
+            description: "Get a message with global bot stats",
+            type: ApplicationCommandOptionType.Subcommand,
         },
     ],
 
@@ -319,6 +325,43 @@ module.exports = {
 
             interaction.reply({embeds: [embed], ephemeral: true});
         };  
+
+        if (subCom === "global") {
+
+            await client.guilds.fetch()
+            const totalGuilds = client.guilds.cache.size;
+
+            const queryRespone = await getAllRoles();
+            const totalTimedRoles = queryRespone[0].roles
+
+            const globalStatEmbed = new EmbedBuilder()
+            .setTitle("Ping Timeout Global Stats")
+            .setThumbnail(client.user.avatarURL())
+            .addFields(
+                {
+                    name: "Bot Name",
+                    value: inlineCode(client.user.username),
+                    inline: true,
+                },
+                {
+                    name: "BotId",
+                    value: inlineCode(client.user.id),
+                    inline: true,
+                },
+                {
+                    name: "Guilds",
+                    value: inlineCode(totalGuilds),
+                    inline: true,
+                },
+                {
+                    name: "Timed Roles",
+                    value: inlineCode(totalTimedRoles),
+                },
+            )
+            .setTimestamp();
+            
+            interaction.reply({embeds: [globalStatEmbed]})
+        }
     },
 };
 
