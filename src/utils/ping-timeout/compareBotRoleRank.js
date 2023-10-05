@@ -6,6 +6,7 @@ module.exports = (client, guildId, roleId) => {
     const botId = client.user.id;
     const botUsername = client.user.username;
 
+    if (!botId) return;
     const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
 
     const botRole = botUser.roles.cache.find(r => r.tags.botId === botId);
