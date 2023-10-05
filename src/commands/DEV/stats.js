@@ -12,6 +12,7 @@ const registerTestCommands = require('../../events/ready/03registerTestCommands'
 const { deniedMessage } = require(`../../utils/baseUtils/defaultEmbeds`);
 const { statGetRole, statGetRolesByGuild, statGetAllRoles } = require("../../utils/database/DEV/stats");
 const { timeout } = require("nodemon/lib/config");
+const { getAllRoles } = require("../../utils/database/botStatus.js/setStatus");
 
 module.exports = {
     name: "dev-stats",
@@ -56,6 +57,11 @@ module.exports = {
                     type: ApplicationCommandOptionType.String,
                 },
             ],
+        },
+        {
+            name: "global",
+            description: "Get a message with global bot stats",
+            type: ApplicationCommandOptionType.Subcommand,
         },
     ],
 
@@ -163,7 +169,11 @@ module.exports = {
                         const guild = client.guilds.cache.get(allGuildIds[guildObjectNr]);
                         const timedRoles = await statGetRolesByGuild(guild.id);
 
-                        guildIds = guildIds + `${inlineCode(guild.name)} (${(inlineCode(guild.id))}) \n`;
+                        if (guild.name.length > 22) {
+                            guildIds = guildIds + `${inlineCode(guild.name.substring(0, 22) + `...`)} (${(inlineCode(guild.id))}) \n`;
+                        } else {
+                            guildIds = guildIds + `${inlineCode(guild.name.substring(0, 25))} (${(inlineCode(guild.id))}) \n`;
+                        }
                         guildMembers = guildMembers + `${inlineCode(guild.memberCount)} \n`;
                         guildTimedRoles = guildTimedRoles + `${inlineCode(Object.keys(timedRoles).length)} \n`;
                     }
@@ -205,7 +215,7 @@ module.exports = {
                 if (roleId) {
                     const databaseRoleInfo = await statGetRole(roleId);
     
-                    if (!databaseRoleInfo) {
+                    if (!databaseRoleInfo[0]) {
                         interaction.reply({embeds: [deniedMessage("This role doesnt have a entry into the database")], ephemeral: true});
                         return;
                     }
@@ -315,6 +325,43 @@ module.exports = {
 
             interaction.reply({embeds: [embed], ephemeral: true});
         };  
+
+        if (subCom === "global") {
+
+            await client.guilds.fetch()
+            const totalGuilds = client.guilds.cache.size;
+
+            const queryRespone = await getAllRoles();
+            const totalTimedRoles = queryRespone[0].roles
+
+            const globalStatEmbed = new EmbedBuilder()
+            .setTitle("Ping Timeout Global Stats")
+            .setThumbnail(client.user.avatarURL())
+            .addFields(
+                {
+                    name: "Bot Name",
+                    value: inlineCode(client.user.username),
+                    inline: true,
+                },
+                {
+                    name: "BotId",
+                    value: inlineCode(client.user.id),
+                    inline: true,
+                },
+                {
+                    name: "Guilds",
+                    value: inlineCode(totalGuilds),
+                    inline: true,
+                },
+                {
+                    name: "Timed Roles",
+                    value: inlineCode(totalTimedRoles),
+                },
+            )
+            .setTimestamp();
+            
+            interaction.reply({embeds: [globalStatEmbed]})
+        }
     },
 };
 
@@ -352,8 +399,17 @@ async function rolesList (client, title, roles, page) {
             const guildData = client.guilds.cache.get(roles[roleObjectNr].guildId);
             const roleData = guildData.roles.cache.get(roles[roleObjectNr].roleId);
 
-            roleNames = roleNames + `${inlineCode(roleData.name)} (${inlineCode(roleData.id)}) \n`;
-            roleGuilds = roleGuilds + `${inlineCode(guildData.name)} (${inlineCode(guildData.id)}) \n`;
+            if (roleData.name.length > 23) {
+                roleNames = roleNames + `${inlineCode(roleData.name.substring(0, 20)+ `...`)} (${inlineCode(roleData.id)}) \n`;
+            } else {
+                roleNames = roleNames + `${inlineCode(roleData.name.substring(0, 23))} (${inlineCode(roleData.id)}) \n`;
+            }
+
+            if (guildData.name.length > 15) {
+                roleGuilds = roleGuilds + `${inlineCode(guildData.name.substring(0, 12)+ `...`)} (${inlineCode(guildData.id)}) \n`;
+            } else {
+                roleGuilds = roleGuilds + `${inlineCode(guildData.name.substring(0, 15))} (${inlineCode(guildData.id)}) \n`;
+            }
         };
     };
 
