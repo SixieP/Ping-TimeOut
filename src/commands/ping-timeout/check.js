@@ -50,13 +50,16 @@ module.exports = {
 
             var botPermStatus = "";
             //check if the bot has a higher role
+
             if (!botId) return;
+
             const botUser = await client.guilds.cache.get(guildId).members.cache.get(botId);
 
             const botRole = await botUser.roles.cache.find(r => r.tags.botId === botId);
 
             if (!botRole) {
             interaction.reply({embeds: [deniedMessage("Error! Please report this as a bug")]});
+
             logging("error", `Could't find managed role. GuildID: ${guildId}`, "check.js/botrole");
             return;
             }
