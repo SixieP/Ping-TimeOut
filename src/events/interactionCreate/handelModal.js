@@ -13,7 +13,7 @@ module.exports = async (client, interaction) => {
 
     if (!command) {
         logging("ERROR", "Command not found", "handelModal.js");
-        interaction.reply({embeds: [deniedMessage("Something went wrong reporting your bug :/ \n Please report it in the support discord (sixie.xyz/sixie-discord)")]});
+        interaction.reply({embeds: [deniedMessage("Something went wrong submitting your bug report :/ \n Please report it in the support discord (sixie.xyz/sixie-discord) or try it again later.")]});
         return;
     }
 
