@@ -24,8 +24,7 @@ module.exports = async (client, message) => {
         }
     }
 
-    //DISABLED - thinking about it
-    //if (mentionEveryonePerms) return;
+    if (mentionEveryonePerms) return;
     logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that doesnt have the mention everyone perms`, "mentionEveryone-perms", true)
 
 
