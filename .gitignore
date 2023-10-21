@@ -1,3 +1,4 @@
 //config files
 config.json
-logs/*
+logs
+node_modules
