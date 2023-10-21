@@ -31,6 +31,8 @@ module.exports = {
         var roleOutput = "";
         var trackingOutput = ""
         var canChangeOutput = "";
+
+
         for (const role of roles) {
             if(role[1].id === everyoneId) {
                 if (role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) {
@@ -78,6 +80,11 @@ module.exports = {
             }
 
             canChangeOutput = canChangeOutput + botPermStatus;
+        }
+
+        if (!roleOutput) {
+            interaction.reply({embeds: [deniedMessage("There are no roles in this server that can be managed by this bot")], ephemeral: true});
+            return;
         }
 
         const embed = new EmbedBuilder()
