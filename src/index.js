@@ -1,6 +1,7 @@
-const { logging } = require('./utils/baseUtils/logging');
-//send a special log message that happens when the bot starts
-logging("start");
+const logging = require('./utils/baseUtils/logging.js');
+const { version } = require('../package.json');
+
+logging.basicInfoLog(`Starting Ping TimeOut version ${version}`)
 
 const { Client, IntentsBitField, Collection } = require('discord.js');
 const { botToken } = require('../config.json');
@@ -29,13 +30,13 @@ const pool = mysql.createPool({
 });
 pool.query(`show databases`, async function (err) {
     if (err) {
-        logging("error", err, "database-startup")
+        logging.basicErrorLog(__filename, err, "connecting to mysql database");
 
         await sleep(300);
 
         throw err;
     }
-    logging("info", `Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup-database')
+    logging.basicInfoLog(`Succesfully connected to the database. Database: "${mysqlDatabase}"`, 'startup-database')
 })
 //END check database connection
 
