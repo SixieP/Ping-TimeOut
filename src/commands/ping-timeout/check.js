@@ -80,6 +80,11 @@ module.exports = {
             canChangeOutput = canChangeOutput + botPermStatus;
         }
 
+        if (!roleOutput) {
+            interaction.reply({embeds: [deniedMessage("There are no roles in this server that can be managed by this bot")], ephemeral: true});
+            return;
+        }
+
         const embed = new EmbedBuilder()
         .setTitle("Available roles")
         .setFields(
