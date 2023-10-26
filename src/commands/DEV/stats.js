@@ -11,7 +11,6 @@ const registerPublicCommands = require('../../events/ready/02registerPublicComma
 const registerTestCommands = require('../../events/ready/03registerTestCommands');
 const { deniedMessage } = require(`../../utils/baseUtils/defaultEmbeds`);
 const { statGetRole, statGetRolesByGuild, statGetAllRoles } = require("../../utils/database/DEV/stats");
-const { timeout } = require("nodemon/lib/config");
 const { getAllRoles } = require("../../utils/database/botStatus.js/setStatus");
 
 module.exports = {
