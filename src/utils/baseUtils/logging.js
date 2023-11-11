@@ -1,20 +1,24 @@
+//VERSION 3.0
+
 const fs = require('fs');
 const path = require('path');
 
-const { fullLogging, verbose } = require('../../../config.json');
+const { verbose } = require('../../../config.json');
 
 const getAllFiles = require('./getAllFiles');
-const { count, error } = require('console');
 
 // info types: INFO, WARNING, ERROR, DEV
+// log types: INFO, WARN, ERROR, VERBOSE INFO, VERBOSE WARN, GLOBAL INFO, GLOBAL WARN
 
 //--default logging file structure--
 //get the paths for all log folders
 const logsDir = path.join(__dirname, '..', '..', '..', "logs");
-const standardLogDir = path.join(__dirname, '..', '..', '..', "logs", "baselog");
-const warningLogDir = path.join(__dirname, '..', '..', '..', "logs", "warning");
-const errorLogDir = path.join(__dirname, '..', '..', '..', "logs", "error");
-const verboseLogDir = path.join(__dirname, '..', '..', '..', "logs", "verbose");
+const standardLogDir = path.join(__dirname, '..', '..', '..', "logs", "standard");
+const infoLogDir = path.join(__dirname, '..', '..', '..', "logs", "info");
+const warningLogDir = path.join(__dirname, '..', '..', '..', "logs", "warnings");
+const errorLogDir = path.join(__dirname, '..', '..', '..', "logs", "errors");
+const globalLogDir = path.join(__dirname, '..', '..', '..', "logs", "global");
+
 
 //check if the log folders exist
 
@@ -24,244 +28,169 @@ if (!fs.existsSync(logsDir)) { //logsDir
 if (!fs.existsSync(standardLogDir)) { //standardLogDir
     fs.mkdirSync(standardLogDir);
 }
+if (!fs.existsSync(infoLogDir)) { //infoLogDir
+    fs.mkdirSync(infoLogDir);
+}
 if (!fs.existsSync(warningLogDir)) { //warningLogDir
     fs.mkdirSync(warningLogDir);
 }
 if (!fs.existsSync(errorLogDir)) { //errorLogDir
     fs.mkdirSync(errorLogDir);
 }
-if (!fs.existsSync(verboseLogDir)) { //verboseLogDir
-    fs.mkdirSync(verboseLogDir);
+if (!fs.existsSync(globalLogDir)) { //globalLogDir
+    fs.mkdirSync(globalLogDir);
 }
+
+
+// Get the datetime in the format that will be used in the log file name
 
 const now = new Date();
-const logfileDate = `${now.getUTCDate()}-${now.getUTCMonth()+1}-${now.getUTCFullYear()}` //default log name, date stucture
-//get the standardlog file name
-const standardLogFiles = getAllFiles(standardLogDir);
+const logfileDate = `${now.getUTCDate()}-${now.getUTCMonth()+1}-${now.getUTCFullYear()}` 
 
+//get the filename of the standardLogFile
 var counter = 0;
 var loop = true
 while (loop) {
     counter++;
 
-    if(!fs.existsSync(`${standardLogDir}\\baselog_${logfileDate}-${counter}`)) {
+    if(!fs.existsSync(`${standardLogDir}\\standard_${logfileDate}-${counter}.log`)) {
         loop = false;
     };
 
 }
-const standardLogFileName = `baselog_${logfileDate}-${counter}`
+const standardLogFilename = `standard_${logfileDate}-${counter}.log`
 
-//get the warning file name
-const warningLogFiles = getAllFiles(errorLogDir);
-
+//get the filename of the infoLogFile
 var counter = 0;
 var loop = true
 while (loop) {
     counter++;
 
-    if(!fs.existsSync(`${warningLogDir}\\baselog_${logfileDate}-${counter}`)) {
+    if(!fs.existsSync(`${infoLogDir}\\info_${logfileDate}-${counter}.log`)) {
         loop = false;
     };
 
 }
-const warningLogFileName = `warning_${logfileDate}-${counter}`
+const infoLogFilename = `info_${logfileDate}-${counter}.log`
 
-//get the error file name
-const errorLogFiles = getAllFiles(errorLogDir);
-
+//get the filename of the warningLogFile
 var counter = 0;
 var loop = true
 while (loop) {
     counter++;
 
-    if(!fs.existsSync(`${errorLogDir}\\baselog_${logfileDate}-${counter}`)) {
+    if(!fs.existsSync(`${warningLogDir}\\warning_${logfileDate}-${counter}.log`)) {
         loop = false;
     };
-    
+
 }
-const errorLogFileName = `error_${logfileDate}-${counter}`
+const warningLogFilename = `warning_${logfileDate}-${counter}.log`
 
-//get the verbose file name
-const verboseLogFiles = getAllFiles(errorLogDir);
-
+//get the filename of the errorLogFile
 var counter = 0;
 var loop = true
 while (loop) {
     counter++;
 
-    if(!fs.existsSync(`${verboseLogDir}\\baselog_${logfileDate}-${counter}`)) {
+    if(!fs.existsSync(`${errorLogDir}\\error_${logfileDate}-${counter}.log`)) {
         loop = false;
     };
-    
-}
-const verboseLogFileName = `verbose_${logfileDate}-${counter}`
 
-//log file locations
-const standardLogFile = path.join(__dirname, '..', '..', '..', "logs", "baselog", standardLogFileName);
-const warningLogFile = path.join(__dirname, '..', '..', '..', "logs", "warning", warningLogFileName);
-const errorLogFile = path.join(__dirname, '..', '..', '..', "logs", "error", errorLogFileName);
-const verboseLogFile = path.join(__dirname, '..', '..', '..', "logs", "verbose", verboseLogFileName);
+}
+const errorLogFilename = `error_${logfileDate}-${counter}.log`
+
+//get the filename of the globalLogFile
+var counter = 0;
+var loop = true
+while (loop) {
+    counter++;
+
+    if(!fs.existsSync(`${globalLogDir}\\global_${logfileDate}-${counter}.log`)) {
+        loop = false;
+    };
+
+}
+const globalLogFilename = `global_${logfileDate}-${counter}.log`
+
+//locations of the log files
+const standardLogFile = path.join(__dirname, '..', '..', '..', "logs", "standard", standardLogFilename);
+const infoLogFile = path.join(__dirname, '..', '..', '..', "logs", "info", infoLogFilename);
+const warningLogFile = path.join(__dirname, '..', '..', '..', "logs", "warning", warningLogFilename);
+const errorLogFile = path.join(__dirname, '..', '..', '..', "logs", "error", errorLogFilename);
+const globalLogFile = path.join(__dirname, '..', '..', '..', "logs", "global", globalLogFilename);
 
 //----logging logic----
 
     //--INFO--
-    module.exports.infoDefault = (logMessage, description) => {
+    exports.info = (fileDir, message) => {
         const time = getTime();
 
-        var message;
-        if (!description) {
-            message = `[${time} INFO]: ${logMessage}`;
-        } else {
-            message = `[${time} INFO] (${description}): ${logMessage}`;
-        }
+        const logMessage = `[${time} INFO] ${message};`;
 
-        standardLog(message);
-    };
+        standardLog(logMessage);
+        infoLog(logMessage)
 
-    module.exports.infoLongInteraction = (filename, description, interaction) => {
-        const time = getTime();
-
-        const message = `[${time} INFO] ${filename} (${description}):\nInteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildID: ${interaction.guildId}\ninteractionType: ${interaction.type}\n]`;
-
-        standardLog(message);
-    };
-
-    module.exports.infoCustomInteraction = (filename, description, interaction, customInteractionData) => {
-        const time = getTime();
-
-        const message = `[${time} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\n${customInteractionData}\n`
-
-        standardLog(message);
+        const globalLogMessage = `[${time} INFO] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
 
     //--WARNING--
-    module.exports.warningDefault = (filename, warning, description) => {
+    exports.warn = (fileDir, message) => {
         const time = getTime();
 
-        var message;
-        if (description) {
-            message = `[${time} WARNING] ${filename} (${description}): ${warning}\n`
-        } else {
-            message = `[${time} WARNING] ${filename}: ${warning}\n`
-        };
+        const logMessage = `[${time} WARN] ${message};`;
 
-        warningLog(message);
+        standardLog(logMessage);
+        warningLog(logMessage)
+
+        const globalLogMessage = `[${time} WARN] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
-
     //--ERROR--
-    module.exports.errorDefault = (filename, errorMessage, description) => {
+    exports.info = (fileDir, message) => {
         const time = getTime();
 
-        const message = `[${time} ERROR] ${filename} (${description}): ${errorMessage}\n`
+        const logMessage = `[${time} ERROR] (${fileDir}): ${message};`;
 
-        errorLog(message);
+        standardLog(logMessage);
+        errorLog(logMessage)
+        globalLog(logMessage);
     };
-
-    module.exports.errorInteraction = (filename, description, interaction, errorMessage) => {
+    //--VERBOSE INFO--
+    exports.verboseInfo = (fileDir, message) => {
         const time = getTime();
 
-        const message = `[${time} ERROR] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\n${errorMessage}\n`;
+        const logMessage = `[${time} INFO] ${message};`;
 
-        errorLog(message);
+        verboseInfoLog(logMessage)
+
+        const globalLogMessage = `[${time} INFO] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
-
-    module.exports.errorLongInteraction = (filename, description, interaction, errorMessage) => {
+    //--VERBOSE WARNING--
+    exports.verboseWarn = (fileDir, message) => {
         const time = getTime();
 
-        const message = `[${time} ERROR] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n${errorMessage}`;
+        const logMessage = `[${time} WARN] ${message};`;
 
-        errorLog(message);
+        verboseWarningLog(logMessage);
+
+        const globalLogMessage = `[${time} WARN] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
-
-    module.exports.errorCustomInteraction = (filename, description, interaction, customInteractionInfo ,errorMessage) => {
+    //--GLOBAL INFO--
+    exports.globalInfo = (fileDir, message) => {
         const time = getTime();
 
-        const message = `[${time} ERROR] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n${customInteractionInfo}\n${errorMessage}`;
-
-        errorLog(message);
+        const globalLogMessage = `[${time} INFO] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
-
-    //DATABASE QUERY
-
-    module.exports.errorQuery = (queryLocation, inputVars, errorMessage) => {
-        const message = `[${getTime()} ERROR_database-${errorMessage.code}] (${queryLocation}):\n${inputVars}\n${errorMessage}`
-
-        errorLog(message);
-    };
-    
-    module.exports.errorQueryInteraction = (queryLocation, interaction, inputVars, errorMessage) => {
-        const message = `[${getTime()} ERROR_database-${errorMessage.code}] (${queryLocation}): interactionId: ${interaction.id}\n${inputVars}\n${errorMessage}`
-
-        errorLog(message);
-    };
-
-    //--VERBOSE--
-    module.exports.verboseInfo = (infoMessage, description) => {
-        
-        var message;
-        if (description) {
-            message = `[${getTime()} INFO] (${description}): ${infoMessage}\n`
-        } else {
-            message = `[${getTime()} INFO]: ${infoMessage}\n`
-        };
-
-        verboseLog(message);
-    };
-
-    module.exports.verboseInteraction = (filename, description, interaction, verboseMessage) => {
-        var message
-        if (verboseMessage) {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\n${verboseMessage}\n`;
-        } else {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\n`;
-        };
-
-        verboseLog(message);
-    };
-
-    module.exports.verboseLongInteraction = (filename, description, interaction, verboseMessage) => {
-
-        var message;
-        if (verboseMessage) {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n${verboseMessage}\n`;
-        } else {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n`;
-        };
-
-        verboseLog(message);
-    };
-
-    module.exports.verboseCustomInteraction = (filename, description, interaction, customInteractionInfo ,verboseMessage) => {
+    //--GLOBAL WARNING--
+    exports.warn = (fileDir, message) => {
         const time = getTime();
 
-        var message;
-        if (verboseMessage) {
-            message = `[${time} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\n${customInteractionInfo}\n${verboseMessage}\n`;
-        } else {
-            message = `[${time} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\n${customInteractionInfo}\n`;
-        };
-
-        verboseLog(message);
-    };
-
-    module.exports.verboseWarningInteraction = (filename, description, interaction, customInteractionInfo, verboseMessage) => {
-
-        var message;
-        if (verboseMessage) {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n${customInteractionInfo}\n${verboseMessage}\n`;
-        } else {
-            message = `[${getTime()} INFO] ${filename} (${description}):\ninteractionId: ${interaction.id}\nuserId: ${interaction.user.id}\nguildId: ${interaction.guildId}\ntype: ${interaction.type}\ncreatedAt: ${interaction.createdAt}\n${customInteractionInfo}\n`;
-        }
-
-        verboseLog(message);
-    };
-
-    module.exports.verboseWarning = (filename, warning, description) => {
-        const time = getTime();
-
-        const message = `[${time} WARNING] ${filename} (${description}): ${warning}\n`
-
-        verboseLog(message);
+        const globalLogMessage = `[${time} WARN] (${fileDir}): ${message};`;
+        globalLog(globalLogMessage);
     };
 
 //functions that will be used inside this script
@@ -274,51 +203,75 @@ function getTime () { //get the current date/time in a nice format
 }
 
 function standardLog (contents) {
-    console.log(contents)
+    try {
+        fs.appendFileSync(standardLogFile, `${contents}\n`);
+    } catch (error) {
+        console.error(error);
+    };
+};
+
+function infoLog (contents) {
+    console.log(contents);
 
     try {
-        fs.appendFileSync(standardLogFile, `${contents}\n`)
+        fs.appendFileSync(infoLogFile, `${contents}\n`);
     } catch (error) {
-        console.error(error)
-    }
-}
+        console.error(error);
+    };
+};
 
 function warningLog (contents) {
-    console.log(contents)
+    console.log(`\x1b[202m${contents}\x1b[0m`);
 
     try {
-        fs.appendFileSync(warningLogFile, `${contents}\n`)
-        fs.appendFileSync(standardLogFile, `${contents}\n`)
+        fs.appendFileSync(warningLogFile, `${contents}\n`);
     } catch (error) {
-        console.error(error)
-    }
-}
+        console.error(error);
+    };
+};
 
 function errorLog (contents) {
-    console.log(contents)
+    console.log(`\x1b[31m${contents}\x1b[0m`);
 
     try {
-        fs.appendFileSync(errorLogFile, `${contents}\n`)
-        fs.appendFileSync(standardLogFile, `${contents}\n`)
+        fs.appendFileSync(errorLogFile, `${contents}\n`);
     } catch (error) {
-        console.error(error)
-    }
-}
+        console.error(error);
+    };
+};
 
-function verboseLog (contents) {
-
+function verboseInfoLog (contents) {
     if (verbose) {
-        console.log(contents)
+        console.log(contents);
+
         try {
-            fs.appendFileSync(standardLogFile, `${contents}\n`)
+            standardLog(contents);
+            infoLog(contents);
         } catch (error) {
-            console.error(error)
-        }
-    } else {
+            console.error(error);
+        };
+    };
+};
+
+function verboseWarningLog (contents) {
+    if (verbose) {
+        console.log(`\x1b[202m${contents}\x1b[0m`);
+
         try {
-            fs.appendFileSync(verboseLogFile, `${contents}\n`)
+            standardLog(contents);
+            warningLog(contents);
         } catch (error) {
-            console.error(error)
-        }
-    }
-}
+            console.error(error);
+        };
+    };
+};
+
+function globalLog (contents) {
+    console.log(contents);
+
+    try {
+        fs.appendFileSync(globalLogFile, `${contents}\n`);
+    } catch (error) {
+        console.error(error);
+    };
+};
