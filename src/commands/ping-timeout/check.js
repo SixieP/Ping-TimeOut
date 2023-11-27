@@ -22,6 +22,7 @@ module.exports = {
         await client.guilds.cache.get(guildId).roles.fetch()
         const roles = await client.guilds.cache.get(guildId).roles.cache;
 
+        client.fetch();
         const botId = client.user.id;
         const botUsername = client.user.username
 

@@ -2,11 +2,11 @@ const { testGuild } = require('../../../config.json');
 const areCommandsDifferent = require('../../utils/baseUtils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/baseUtils/getApplicationCommands');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
-const { logging } = require('../../utils/baseUtils/logging');
+const logging = require('../../utils/baseUtils/logging');
 
 module.exports = async (client) => {
     try {
-        logging("info", `Begin command check`, "test_command_reg")
+        logging.info(`Begin command check`, "test_command_reg")
         const localCommands = getLocalCommands();
         const applicationCommands = await getApplicationCommands(
             client, 
@@ -27,13 +27,13 @@ module.exports = async (client) => {
             if (existingCommand) {
                 if (localCommand.deleted) {
                     await applicationCommands.delete(existingCommand.id);
-                    logging("info", `The test command ${name} has been deleted cause it is set to deleted`, "test_command_reg")
+                    logging.info(`The test command ${name} has been deleted cause it is set to deleted`, "test_command_reg")
                     continue;
                 }
 
                 if (!localCommand.testCommand) {
                     await applicationCommands.delete(existingCommand.id);
-                    logging("info", `The command ${name} has been deleted from the test commands cause it is not a test command anymore`, "test_command_reg")
+                    logging.info(`The command ${name} has been deleted from the test commands cause it is not a test command anymore`, "test_command_reg")
                     continue;
                 }
 
@@ -43,16 +43,16 @@ module.exports = async (client) => {
                         options,
                         defaultMemberPermissions,
                     });
-                    logging("info", `The test command ${name} has been changed.`, "test_command_reg")
+                    logging.info(`The test command ${name} has been changed.`, "test_command_reg")
                 }
             } else {
                 if (localCommand.deleted) {
-                    //logging("info", `Skipping registering test command ${name} cause it is set to deleted`, "test_command_reg")
+                    //logging.info(`Skipping registering test command ${name} cause it is set to deleted`, "test_command_reg")
                     continue;
                 }
 
                 if (!localCommand.testCommand) {
-                    //logging("info", `Skipping registering "${name}" cause it is not a test command`, "test_command_reg")
+                    //logging.info(`Skipping registering "${name}" cause it is not a test command`, "test_command_reg")
                     continue;
                 }
 
@@ -62,11 +62,11 @@ module.exports = async (client) => {
                     options,
                     defaultMemberPermissions,
                 });
-                logging("info", `The test command ${name} has been registered.`, "test_command_reg")
+                logging.info(`The test command ${name} has been registered.`, "test_command_reg")
             }
         }
-        logging("info", `End command check`, "test_command_reg")
+        logging.info(`End command check`, "test_command_reg")
     } catch (error) {
-        logging("error", error, "test_command_reg")
+        logging.error(error, `${__filename} - test_command_reg`)
     }
 };
