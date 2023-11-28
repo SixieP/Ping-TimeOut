@@ -2,7 +2,6 @@ const { EmbedBuilder, inlineCode, bold, InviteTargetType, italic } = require("di
 
 function permsCheck(client, guildId) {
     //permscheck - fullPerms: 277294107648
-    client.fetch();
     const botId = client.user.id;
 
     if (!botId) return;

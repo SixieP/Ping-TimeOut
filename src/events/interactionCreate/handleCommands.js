@@ -2,12 +2,11 @@ const { inlineCode, underscore, Collection } = require('discord.js');
 const { devs, testGuild} = require('../../../config.json');
 const { deniedMessage, warnMessage } = require('../../utils/baseUtils/defaultEmbeds');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
-const logging = require('../../utils/baseUtils/logging');
+const { logging } = require('../../utils/baseUtils/logging');
 
 
 module.exports = async (client, interaction) => {
     if (!interaction.isChatInputCommand()) return;
-    logging.verboseLongInteraction(__filename, "command handler", interaction)
 
     const localCommands = getLocalCommands();
     //command handeling logic
@@ -44,10 +43,9 @@ module.exports = async (client, interaction) => {
         
         //command checking
         if (!commandObject) {
-            logging.errorShortInteraction(__filename, "command-handler", interaction, "no command object")
             interaction.reply({
                 embeds: [deniedMessage(`
-                Can't find this command. Please contact the bots owner or create a bug report using /bug-report`)], ephemeral: true
+                Can't find this command. Please contact the bots owner`)], ephemeral: true
             });
             return;};
 
@@ -71,7 +69,7 @@ module.exports = async (client, interaction) => {
                     embeds: [embed],
                     ephemeral: true,
                 });
-                logging.warningDefault(__filename, `A DEV command was executed! | InteractionId: ${interaction.id}`);
+                logging("info", `\n| A dev only command was used by a non-authorized user.\n| Guild: ${interaction.guild.name} (${interaction.guildId})\n| User: ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}))\n`)
                 return;
             }
         }
@@ -84,6 +82,7 @@ module.exports = async (client, interaction) => {
                 });
                 return;
             }
+            
         }
         if (commandObject.permissionsRequired?.lenght) {
             for (const permission of commandObject.permissionsRequired) {
@@ -102,7 +101,7 @@ module.exports = async (client, interaction) => {
 
                 if (!bot.permissions.has(permission)) {
                     interaction.reply({
-                        content: 'The bot has not enough permissions to execute this command!',
+                        content: 'The bot has not enough permissions!',
                         ephemeral: true,
                     });
                     return;
@@ -111,7 +110,7 @@ module.exports = async (client, interaction) => {
         } 
         await commandObject.callback(client, interaction);
     } catch (error) {
-        logging.errorLongInteraction(__filename, "command handler", interaction, error);
+        logging("error", error, "command handler")
 
         if (interaction.isRepliable()) {
             interaction.reply({embeds: [deniedMessage("There was an error using this command :/. Please try again later and/or create a bug-report.")], ephemeral: true})

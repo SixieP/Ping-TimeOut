@@ -1,7 +1,5 @@
 const { EmbedBuilder, inlineCode, Embed, PermissionFlagsBits, ApplicationCommandOptionType, codeBlock, bold} = require('discord.js');
 const { addUserToBlacklist, removeUserFromBlacklist, blacklistedUser } = require('../../utils/database/DEV/bugReportBlacklist');
-const logging = require('../../utils/baseUtils/logging');
-const logTemplate = require('../../utils/baseUtils/logTemplates');
 const { deniedMessage, aprovedMessage } = require('../../utils/baseUtils/defaultEmbeds');
 
 module.exports = {
@@ -69,6 +67,7 @@ module.exports = {
     callback: async (client, interaction) => {
         const commGroup = interaction.options.getSubcommandGroup();
         const commName = interaction.options.getSubcommand();
+
         if (commGroup === "user") {
             if (commName === "blacklist") {
                 const userId = interaction.options.get('user-id').value;

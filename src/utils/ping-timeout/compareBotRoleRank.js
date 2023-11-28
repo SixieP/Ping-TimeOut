@@ -3,7 +3,6 @@ const { logging } = require("../baseUtils/logging");
 module.exports = (client, guildId, roleId) => {
     const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
 
-    client.fetch();
     const botId = client.user.id;
     const botUsername = client.user.username;
 

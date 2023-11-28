@@ -1,9 +1,8 @@
-const logging = require("../baseUtils/logging");
+const { logging } = require("../baseUtils/logging");
 const { getNotMentionableRoles, databaseRoleErrorState, updateSetMentionable } = require("../database/ping-timeout/makeMentionable");
 const noPermsMessage = require("./noPermsMessage");
 
 module.exports = async (client) => {
-    logging.background("Start makeMentonable.js script", __filename);
     const roles = await getNotMentionableRoles();
 
     for (const role of roles) {
@@ -23,9 +22,7 @@ module.exports = async (client) => {
                 const roleData = client.guilds.cache.get(guildId).roles.cache.get(roleId)
                 await roleData.setMentionable(true, 'Timeout done');
 
-                await updateSetMentionable(roleId);
-
-                logging.background(`Made role ${roleId} mentionable`, __filename);
+                updateSetMentionable(roleId);
             } catch (error) {
                 if (error.code === 50013) {
                     databaseRoleErrorState(roleId, true);
@@ -34,15 +31,14 @@ module.exports = async (client) => {
                         noPermsMessage(client, roleId, guildId);
                     };
 
-                    logging.verboseWarn(JSON.stringify({"GuildId": guildId, "roleId": roleId, "ErrorState": errorState}), `${__filename} - Trying to make a role mentionable while the bot doesn't have the required permissions.`);
+                    logging("INFO", error, "makeMentionable.js/setMentionable", true);
                     return;
                 } else {
-                    logging.error(`${JSON.stringify({"GuildId": guildId, "roleId": roleId, "ErrorState": errorState, "ErrorCode": error.code})} | ${error}`, `${__filename} - Trying to make a role mentionable`)
+                    logging("ERROR", error, "makeMentionable.js/setMentionable");
                     return;
                 }
             }
             
         };
     }
-    logging.background("End makeMentonable script", __filename);
 }
