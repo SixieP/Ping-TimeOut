@@ -147,7 +147,7 @@ const globalLogFile = path.join(__dirname, '..', '..', '..', "logs", "global", g
         globalLog(globalLogMessage);
     };
     //--ERROR--
-    exports.info = (fileDir, message) => {
+    exports.error = (fileDir, message) => {
         const time = getTime();
 
         const logMessage = `[${time} ERROR] (${fileDir}): ${message};`;
@@ -186,7 +186,7 @@ const globalLogFile = path.join(__dirname, '..', '..', '..', "logs", "global", g
         globalLog(globalLogMessage);
     };
     //--GLOBAL WARNING--
-    exports.warn = (fileDir, message) => {
+    exports.globalWarn = (fileDir, message) => {
         const time = getTime();
 
         const globalLogMessage = `[${time} WARN] (${fileDir}): ${message};`;
