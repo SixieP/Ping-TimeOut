@@ -1,8 +1,11 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
-
-async function updateLastMention (roleId, lastMention, mentionable) {
+async function updateLastMention(interaction,  roleId, lastMention, mentionable) {
+    logging.verboseInfo(__filename, `updateLastMention, interactionId: ${interaction.id} | Query executed`);
     var mentionInt;
     if (mentionable === true) {
         mentionInt = 1;
@@ -11,7 +14,7 @@ async function updateLastMention (roleId, lastMention, mentionable) {
     }
     
     try {
-        await pool.query(`
+        await promisePool.execute(`
         update roles
         set 
         lastMention = ?,
@@ -19,8 +22,13 @@ async function updateLastMention (roleId, lastMention, mentionable) {
         where
         roleId = ?`, [lastMention, mentionInt, roleId ])
     } catch (error) {
-        logging("error", error, "database/ping-timeout/newMention.js/updateLastMention");
-        return "error";
+        if (error.code === "econnrefused") {
+            logging.error(__filename, `updateLastMention, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            return "err_ECONNREFUSED";
+        } else {
+            logging.error(__filename, ` updateLastMention, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            return "err_error";
+        }
     }
 }
 

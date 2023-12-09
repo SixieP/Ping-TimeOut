@@ -1,17 +1,21 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
-async function getNotMentionableRoles(guildId) {
+async function getNotMentionableRoles(interaction, guildId) {
+    logging.verboseInfo(__filename, `getNotMentionableRoles, interactionId: ${interaction.id} | Query executed`);
     try {
         if (!guildId) {
-            const [ roles ] = await pool.query(`
+            const [ roles ] = await promisePool.execute(`
             select * from roles
             where
             mentionable = 0`, 
             [guildId]);
             return roles;
         } else {
-            const [ roles ] = await pool.query(`
+            const [ roles ] = await promisePool.execute(`
             select * from roles
             where
             guildId = ?
@@ -21,14 +25,20 @@ async function getNotMentionableRoles(guildId) {
             return roles;
         }
     } catch (error) {
-        logging("error", error, "database/ping-timeout/makeMentionable.js/getNotMentionableRoles")
-        return "error";
+        if (error.code === "econnrefused") {
+            logging.error(__filename, `getNotMentionableRoles, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            return "err_ECONNREFUSED";
+        } else {
+            logging.error(__filename, ` getNotMentionableRoles, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            return "err_error";
+        }
     }
 }
 
-async function updateSetMentionable (roleId) {
+async function updateSetMentionable (interaction, roleId) {
+    logging.verboseInfo(__filename, `updateSetMentionable, interactionId: ${interaction.id} | Query executed`);
     try {
-        await pool.query(`
+        await promisePool.execute(`
         update roles
         set 
         mentionable = 1,
@@ -36,12 +46,18 @@ async function updateSetMentionable (roleId) {
         where
         roleId = ?`, [ roleId ])
     } catch (error) {
-        logging("error", error, "database/ping-timeout/makeMentionable.js/updateSetMentionable")
-        return "error";
+        if (error.code === "econnrefused") {
+            logging.error(__filename, `updateSetMentionable, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            return "err_ECONNREFUSED";
+        } else {
+            logging.error(__filename, ` updateSetMentionable, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            return "err_error";
+        }
     }
 }
 
-async function databaseRoleErrorState (roleId, errorState = true) {
+async function databaseRoleErrorState (interaction, roleId, errorState = true) {
+    logging.verboseInfo(__filename, `databaseRoleErrorState, interactionId: ${interaction.id} | Query executed`);
     var setErrorState;
     if (errorState === false | errorState === 0) {
         setErrorState = 0
@@ -49,15 +65,20 @@ async function databaseRoleErrorState (roleId, errorState = true) {
         setErrorState = 1
     }
     try {
-        await pool.query(`
+        await promisePool.execute(`
         update roles
         set 
         inError = ?
         where
         roleId = ?`, [ setErrorState, roleId ])
     } catch (error) {
-        logging("error", error, "database/ping-timeout/makeMentionable.js/setInError")
-        return "error";
+        if (error.code === "econnrefused") {
+            logging.error(__filename, `databaseRoleErrorState, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            return "err_ECONNREFUSED";
+        } else {
+            logging.error(__filename, ` databaseRoleErrorState, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            return "err_error";
+        }
     }
 }
 

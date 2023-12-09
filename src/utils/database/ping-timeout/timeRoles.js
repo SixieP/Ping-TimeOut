@@ -1,9 +1,13 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
-async function rolesByGuild(guildId) {
+async function rolesByGuild(interaction, guildId) {
+    logging.verboseInfo(__filename, `rolesByGuild, interactionId: ${interaction.id} | Query executed`);
     try {
-        const [result] = await pool.query(`
+        const [result] = await promisePool.execute(`
         select * from roles
         where
         guildId = ?`,
@@ -14,8 +18,13 @@ async function rolesByGuild(guildId) {
         };
         return result;
     } catch (error) {
-        logging("error", error, "database/ping-timeout/timeRoles.js/rolesByGuild");
-        return "error";
+        if (error.code === "econnrefused") {
+            logging.error(__filename, `rolesByGuild, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            return "err_ECONNREFUSED";
+        } else {
+            logging.error(__filename, ` rolesByGuild, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            return "err_error";
+        }
     }
 }
 
