@@ -13,7 +13,7 @@ function testConnecion() {
                     logging.error(__filename, `There was an error querying the database | Error: ${err}`);
                 }
             } else {
-                return results;
+                logging.info(__filename, 'Successfully connected to the database!')
             }
         }
     )
