@@ -1,8 +1,12 @@
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { updateLastMention } = require('../../utils/database/ping-timeout/newMention');
 
-const {logging} = require('../../utils/baseUtils/logging');
-const { PermissionFlagsBits } = require('discord.js');
+
+
+const logging = require('../../utils/baseUtils/logging');
+const logTemplate = require('../../utils/baseUtils/logTemplates');
+
+const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
 const noPermsMessage = require('../../utils/ping-timeout/noPermsMessage');
 
 module.exports = async (client, message) => {
@@ -11,59 +15,56 @@ module.exports = async (client, message) => {
     //check if the message contains a mention
     if(!message.mentions.roles.first()) return;
 
+    logging.globalInfo(__filename, logTemplate.messageInteractionCreate(message));
     const guildId = message.guildId;
 
-    const roles = message.member.roles.cache;
+    // Check if the user has the mention everyone permission
+    const member = message.member;
 
-    var mentionEveryonePerms = false;
-    for (role of roles) {
-        if (role[1].permissions.has(PermissionFlagsBits.MentionEveryone)) {
+    if (member.permissions.has(PermissionsBitField.Flags.MentionEveryone)) {
+        logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "User with mention everyone perms mentioned a role"));
 
-            logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that does have the mention everyone perms`, "mentionEveryone-perms", true)
-            mentionEveryonePerms = true;
-        }
+        return;
     }
 
-    if (mentionEveryonePerms) return;
-    logging("handleRoleMentions.js", `${guildId} | a role has been mentioned by a user that doesnt have the mention everyone perms`, "mentionEveryone-perms", true)
+
+    logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "User without mention everyone perms mentioned a role"));
 
 
-    const mentionedRoles = message.mentions.roles;
+    const mentionedRoles = message.mentions.roles.catch(error => {
+        logging.error(__filename, logTemplate.messageInteractionCustomInfo(message, "Error catching mentioned roles in message"));
+        return;
+    });
+    
     for(mentionedRole of mentionedRoles) {
        const roleId = (mentionedRole[1].id);
 
         const inDatabase = await roleInDatabase(roleId);
         if (inDatabase === true) {
-            const nowUTC = new Date();
 
-            //make the role not mentionable
-            role = await client.guilds.cache.get(guildId).roles.fetch(roleId).catch(error => {
-                logging("handleRoleMentions.js", error, "error", true)
-                return;
+            logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "A timed role got mentioned", `RoleId: ${roleId}`));
+
+            //Catch the mentioned role.
+            message.guild.roles.fetch(roleId)
+            .then(() => role.setMentionable(false, "Ping TimeOut role got mentioned. Made unmentionable"))
+            .then(() => logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Made role unmentionable", `roleId: ${roleId}`)))
+            .then(() => {
+                updateLastMention(role.id, new Date(), "false"); //Set the mentionable state in the database to false
+                logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Set the mentionable state in the database to 'False'", `roleId: ${role.id}`));
+            })
+            .catch(error => {
+                if (error.code === 10011) { //Unknown role
+                    logging.globalWarn(__filename, logTemplate.messageInteractionCustomInfo(message, 'Known error "Unkown role" while: catching a role by id/making unmentionable;', `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`));
+                    return;
+                } else if (error.code === 50013) { //You lack permissions to perform that action
+                    logging.globalWarn(__filename, logTemplate.messageInteractionCustomInfo(message, 'Known error "You lack permissions to perform that action" while making a role unmentionable;', `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`));
+                    noPermsMessage(client, role.id, guildId, message);
+                    return;
+                } else { //When a not expected error happens
+                    logging.warn(__filename, logTemplate.messageInteractionCustomInfo(message, "Unexpected error while making role unmentionable", `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`))
+                    return;
+                }
             });
-
-            if (role) {
-                const setMentionRes = await role.setMentionable(false, "Role got mentioned").catch(error => {
-                    if (error.code === 50013) {
-                        logging("INFO", error, "handleRoleMentions.js/setMentionable", true);
-                        noPermsMessage(client, roleId, guildId, message);
-                        return;
-                    } else {
-                        logging("ERROR", error, "handleRoleMentions.js/setMentionable");
-                        return;
-                    }
-                });
-                if (!setMentionRes) return;
-
-                //update database query
-                updateLastMention(roleId, nowUTC, "false");
-
-                logging("handleRoleMentions.js", `${guildId} | role got mentioned and has been made publicly unmentionable`, "unmentionable", true)
-            } else {
-                logging("handleRoleMentions.js", `${guildId} | role got mentioned and should have made not mentionable but that didnt happen`, "unmentionable", true)
-            }
-
-
         }
     }
 
