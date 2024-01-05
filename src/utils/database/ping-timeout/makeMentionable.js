@@ -5,7 +5,7 @@ const pool = connectDatabase();
 const promisePool = pool.promise();
 
 async function getNotMentionableRoles(interaction, guildId) {
-    logging.verboseInfo(__filename, `getNotMentionableRoles, interactionId: ${interaction.id} | Query executed`);
+    logging.verboseInfo(__filename, `getNotMentionableRoles, interactionId: ${interaction?.id} | Query executed`);
     try {
         if (!guildId) {
             const [ roles ] = await promisePool.execute(`
@@ -26,17 +26,17 @@ async function getNotMentionableRoles(interaction, guildId) {
         }
     } catch (error) {
         if (error.code === "econnrefused") {
-            logging.error(__filename, `getNotMentionableRoles, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            logging.error(__filename, `getNotMentionableRoles, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
             return "err_ECONNREFUSED";
         } else {
-            logging.error(__filename, ` getNotMentionableRoles, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            logging.error(__filename, ` getNotMentionableRoles, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
             return "err_error";
         }
     }
 }
 
 async function updateSetMentionable (interaction, roleId) {
-    logging.verboseInfo(__filename, `updateSetMentionable, interactionId: ${interaction.id} | Query executed`);
+    logging.verboseInfo(__filename, `updateSetMentionable, interactionId: ${interaction?.id} | Query executed`);
     try {
         await promisePool.execute(`
         update roles
@@ -47,17 +47,17 @@ async function updateSetMentionable (interaction, roleId) {
         roleId = ?`, [ roleId ])
     } catch (error) {
         if (error.code === "econnrefused") {
-            logging.error(__filename, `updateSetMentionable, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            logging.error(__filename, `updateSetMentionable, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
             return "err_ECONNREFUSED";
         } else {
-            logging.error(__filename, ` updateSetMentionable, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            logging.error(__filename, ` updateSetMentionable, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
             return "err_error";
         }
     }
 }
 
 async function databaseRoleErrorState (interaction, roleId, errorState = true) {
-    logging.verboseInfo(__filename, `databaseRoleErrorState, interactionId: ${interaction.id} | Query executed`);
+    logging.verboseInfo(__filename, `databaseRoleErrorState, interactionId: ${interaction?.id} | Query executed`);
     var setErrorState;
     if (errorState === false | errorState === 0) {
         setErrorState = 0
@@ -73,10 +73,10 @@ async function databaseRoleErrorState (interaction, roleId, errorState = true) {
         roleId = ?`, [ setErrorState, roleId ])
     } catch (error) {
         if (error.code === "econnrefused") {
-            logging.error(__filename, `databaseRoleErrorState, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
+            logging.error(__filename, `databaseRoleErrorState, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
             return "err_ECONNREFUSED";
         } else {
-            logging.error(__filename, ` databaseRoleErrorState, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
+            logging.error(__filename, ` databaseRoleErrorState, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
             return "err_error";
         }
     }

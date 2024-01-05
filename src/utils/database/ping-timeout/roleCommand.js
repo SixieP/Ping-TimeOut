@@ -77,6 +77,8 @@ async function removeTimeoutRole(interaction, roleId) {
             return "err_error";
         }
     }
+
+    return "success";
 }
 
 async function makeMentionable(interaction, roleId, mentionable) {

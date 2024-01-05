@@ -6,7 +6,7 @@ const { updateLastMention } = require('../../utils/database/ping-timeout/newMent
 const logging = require('../../utils/baseUtils/logging');
 const logTemplate = require('../../utils/baseUtils/logTemplates');
 
-const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
+const { PermissionsBitField } = require('discord.js');
 const noPermsMessage = require('../../utils/ping-timeout/noPermsMessage');
 
 module.exports = async (client, message) => {
@@ -39,16 +39,16 @@ module.exports = async (client, message) => {
     for(mentionedRole of mentionedRoles) {
        const roleId = (mentionedRole[1].id);
 
-        const inDatabase = await roleInDatabase(roleId);
+        const inDatabase = await roleInDatabase("", roleId);
         if (inDatabase === true) {
 
             logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "A timed role got mentioned", `RoleId: ${roleId}`));
 
             //Catch the mentioned role.
             message.guild.roles.fetch(roleId)
-            .then(() => role.setMentionable(false, "Ping TimeOut role got mentioned. Made unmentionable"))
+            .then(role => role.setMentionable(false, "Ping TimeOut role got mentioned. Made unmentionable"))
             .then(() => logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Made role unmentionable", `roleId: ${roleId}`)))
-            .then(() => {
+            .then(role => {
                 updateLastMention(role.id, new Date(), "false"); //Set the mentionable state in the database to false
                 logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Set the mentionable state in the database to 'False'", `roleId: ${role.id}`));
             })

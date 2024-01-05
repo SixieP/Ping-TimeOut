@@ -1,6 +1,5 @@
 const { EmbedBuilder, inlineCode } = require("@discordjs/builders");
 
-const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
 const { rolesByGuild } = require("../../utils/database/ping-timeout/timeRoles");
 const { deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
@@ -17,7 +16,7 @@ module.exports = {
     callback: async (client, interaction) => {
         const guildId = interaction.guildId;
 
-        timedRoles = await rolesByGuild(guildId);
+        timedRoles = await rolesByGuild(interaction, guildId);
         
 
         if (timedRoles === "noDataError") {

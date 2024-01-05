@@ -2,22 +2,25 @@
 
 const { EmbedBuilder, bold } = require("@discordjs/builders");
 const { permsCheck } = require("./permsCheck");
-const { logging } = require("../baseUtils/logging");
 const compareBotRoleRank = require("./compareBotRoleRank");
 const { aprovedMessage, deniedMessage } = require("../baseUtils/defaultEmbeds");
+
+const logging = require("../baseUtils/logging");
+const logTemplates = require("../baseUtils/logTemplates");
 
 
 module.exports = async (client, roleId, guildId, interaction) => {
     //get info about the guild and role
     client.guilds.fetch();
-    const guildInfo = client.guilds.cache.get(guildId).catch(error => {
-        logging("error", error, "noPermsMessage.js/fetchGuildinf")
+    const guildInfo = client.guilds.fetch(guildId).catch(error => {
+        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while fetching guild", `Error: ${error}`));
+        return;
     });
 
     const systemChannelId = guildInfo.systemChannelId;
 
     if (!systemChannelId) {
-        logging("noPermsMesage.js", `This guild (${guildId}) has no system channel`, "noSysChan", true);
+        logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Guild has no system channel. noPermsMessage NOT send. ${guildId}, roleId: ${roleId}`));
         return;
     }
     
@@ -52,8 +55,8 @@ module.exports = async (client, roleId, guildId, interaction) => {
     }
 
     guildInfo.channels.fetch();
-    const systemChannelInfo = guildInfo.channels.cache.get(systemChannelId).catch(error => {
-        logging("error", error, "noPermsMessage.js/fetchSysChan")
+    const systemChannelInfo = guildInfo.channels.fetch(systemChannelId).catch(error => {
+        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while fetching channel", `channelId: ${channelId}. Error: ${error}`));
     });
 
     const permsEmbed = await permsCheck(client, guildId);
@@ -68,6 +71,6 @@ module.exports = async (client, roleId, guildId, interaction) => {
     }
 
     await systemChannelInfo.send({embeds: [errorEmbed, permsEmbed, rolePosEmbed]}).catch(error => {
-        logging("error", error, "noPermsMessage.js")
+        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Trying to send a embedded message.", `Error: ${error}`));
     })
 }
