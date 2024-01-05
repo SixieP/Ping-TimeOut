@@ -31,7 +31,7 @@ module.exports = {
     // deleted: Boolean,
     // testCommand: Boolean,
 
-    callback: (client, interaction) => {
+    callback: async (client, interaction) => {
         const page = interaction.options.get('page')?.value;
         const guildId = interaction.guildId;
 
@@ -67,7 +67,7 @@ module.exports = {
 
         if (page === "setup") {
             //permsCheck
-            permsCheckEmbed = permsCheck(client, guildId);
+            permsCheckEmbed = await permsCheck(client, guildId);
 
             //setup embed
             embed = new EmbedBuilder()
