@@ -7,8 +7,13 @@ const pool = mysql.createPool({
     port: mysqlPort,
     user: mysqlUser,
     password: mysqlPass,
-    database: mysqlDatabase
-}).promise();
+    database: mysqlDatabase,
+    waitForConnections: true,
+    connectionLimit: 15,
+    queueLimit: 20,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
+});
 
 return pool;
 }
