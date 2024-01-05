@@ -15,8 +15,8 @@ const getAllFiles = require('./getAllFiles');
 const logsDir = path.join(__dirname, '..', '..', '..', "logs");
 const standardLogDir = path.join(__dirname, '..', '..', '..', "logs", "standard");
 const infoLogDir = path.join(__dirname, '..', '..', '..', "logs", "info");
-const warningLogDir = path.join(__dirname, '..', '..', '..', "logs", "warnings");
-const errorLogDir = path.join(__dirname, '..', '..', '..', "logs", "errors");
+const warningLogDir = path.join(__dirname, '..', '..', '..', "logs", "warning");
+const errorLogDir = path.join(__dirname, '..', '..', '..', "logs", "error");
 const globalLogDir = path.join(__dirname, '..', '..', '..', "logs", "global");
 
 
@@ -147,7 +147,7 @@ const globalLogFile = path.join(__dirname, '..', '..', '..', "logs", "global", g
         globalLog(globalLogMessage);
     };
     //--ERROR--
-    exports.info = (fileDir, message) => {
+    exports.error = (fileDir, message) => {
         const time = getTime();
 
         const logMessage = `[${time} ERROR] (${fileDir}): ${message};`;
@@ -186,7 +186,7 @@ const globalLogFile = path.join(__dirname, '..', '..', '..', "logs", "global", g
         globalLog(globalLogMessage);
     };
     //--GLOBAL WARNING--
-    exports.warn = (fileDir, message) => {
+    exports.globalWarn = (fileDir, message) => {
         const time = getTime();
 
         const globalLogMessage = `[${time} WARN] (${fileDir}): ${message};`;
@@ -242,8 +242,6 @@ function errorLog (contents) {
 
 function verboseInfoLog (contents) {
     if (verbose) {
-        console.log(contents);
-
         try {
             standardLog(contents);
             infoLog(contents);
@@ -255,7 +253,6 @@ function verboseInfoLog (contents) {
 
 function verboseWarningLog (contents) {
     if (verbose) {
-        console.log(`\x1b[202m${contents}\x1b[0m`);
 
         try {
             standardLog(contents);
@@ -267,8 +264,6 @@ function verboseWarningLog (contents) {
 };
 
 function globalLog (contents) {
-    console.log(contents);
-
     try {
         fs.appendFileSync(globalLogFile, `${contents}\n`);
     } catch (error) {
