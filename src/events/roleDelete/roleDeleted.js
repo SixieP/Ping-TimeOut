@@ -6,7 +6,7 @@ const logging = require('../../utils/baseUtils/logging');
 module.exports = async (client, role) => {
     const roleId = role.id;
 
-    timedRole = await roleInDatabase(roleId);
+    timedRole = await roleInDatabase("", roleId);
 
     if (!timedRole) return;
 
