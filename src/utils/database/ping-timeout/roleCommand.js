@@ -4,44 +4,50 @@ const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 const promisePool = pool.promise();
 
-async function newTimeOutRole(interaction, roleId, guildId, timeoutTime, mentionable) {
-    logging.verboseInfo(__filename, `newTimeOutRole, interactionId: ${interaction.id} | Query executed`);
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
-    } else {
-        mentionInt = 0;
-    }
+function createNewTimedroleQuery (roleId, guildId, timeoutDuration, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "createNewTimedroleQuery" function and query');
 
-    try {
-        await promisePool.execute(`
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
+    } else {
+        mentionable = 0;
+    };
+
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
         insert into roles
         (roleId, guildId, timeoutTime, mentionable)
         values
         (?, ?, ?, ?)`,
-        [roleId, guildId, timeoutTime, mentionInt])
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `newTimeOutRole, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` newTimeOutRole, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+        [roleId, guildId, timeoutDuration, mentionable])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "createNewTimedroleQuery" query');
 
-async function updateTimeoutTime(interaction, roleId, timeoutTime, mentionable) {
-    logging.verboseInfo(__filename, `updateTimeoutTime, interactionId: ${interaction.id} | Query executed`);
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "createNewTimedroleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
+
+function editTimedRoleQuery (roleId, timeoutDuration, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "editTimedRoleQuery" function and query');
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
+        mentionable = 0;
+    };
 
-    try {
-        await promisePool.execute(`
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set
         timeOutTime = ?,
@@ -49,71 +55,82 @@ async function updateTimeoutTime(interaction, roleId, timeoutTime, mentionable) 
         inError = 0
         where
         roleId = ?`,
-        [timeoutTime, mentionInt, roleId]);
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `updateTimeoutTime, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` updateTimeoutTime, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
+        [timeoutDuration, mentionable, roleId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "editTimedRoleQuery" query');
+
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "editTimedRoleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
 }
 
-async function removeTimeoutRole(interaction, roleId) {
-    logging.verboseInfo(__filename, `removeTimeoutRole, interactionId: ${interaction.id} | Query executed`);
-    try {
-        await promisePool.execute(`
-        delete from roles
-        where
-        roleId = ?`, [roleId])
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `removeTimeoutRole, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` removeTimeoutRole, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
+function removeTimedRoleQuery (roleId, guildId) {
+    logging.verboseInfo(__filename, 'Executing "removeTimedRoleQuery" function and query');
 
-    return "success";
-}
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
+        DELETE FROM roles WHERE roleId = ? and guildId = ?`,
+        [roleId, guildId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "removeTimedRoleQuery" query');
 
-async function makeMentionable(interaction, roleId, mentionable) {
-    logging.verboseInfo(__filename, `makeMentionable, interactionId: ${interaction.id} | Query executed`);
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "removeTimedRoleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
+
+function resetTimerTimedRoleQuery(roleId, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "resetTimerTimedRoleQuery" function and query');
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
+        mentionable = 0;
+    };
 
-    try {
-        await promisePool.execute(`
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set
         mentionable = ?,
         inError = 0
         where
         roleId = ?`,
-        [mentionInt, roleId]);
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `makeMentionable, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` makeMentionable, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
+        [mentionable, roleId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "resetTimerTimedRoleQuery" query');
+
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "resetTimerTimedRoleQuery" query. code": "err_datab_roleco_resetTiRoTime", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        })
+    });
 }
 
 //make functions global
 module.exports = { 
-    newTimeOutRole,
-    updateTimeoutTime,
-    removeTimeoutRole,
-    makeMentionable,
+    createNewTimedroleQuery,
+    editTimedRoleQuery,
+    removeTimedRoleQuery,
+    resetTimerTimedRoleQuery
 };
