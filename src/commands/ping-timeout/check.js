@@ -215,7 +215,7 @@ module.exports = {
                 
             })
             .catch((error) => {
-                roleInDatabaseArray.push(error);
+                roleInDatabaseArray.push(error); //Error = specified text. Not the actuall full error
             });
 
 
@@ -233,7 +233,9 @@ module.exports = {
             const string = array.toString();
             const newLineString = string.replace(/,/g, "\n");
 
-
+            if (!newLineString) {
+                return "ERR - No Data";
+            }
 
             return newLineString.slice(0, 1024);
         }
