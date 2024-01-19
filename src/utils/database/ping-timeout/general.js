@@ -12,12 +12,12 @@ function roleInDatabase(roleId) {
         roleId = ?`, [roleId])
         .then(([rows, fields]) => {
             if (rows.length === 1) {
-                resolve("true");
+                resolve(true);
             } else if (rows.length > 1) {
                 logging.warn(__filename, `roleId more than once in roles table. roleId: "${roleId}"`);
                 reject("error: err_5");
             } else {
-                resolve("false");
+                resolve(false);
             }
         })
         .catch((error) => {
