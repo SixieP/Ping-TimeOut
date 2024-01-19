@@ -137,7 +137,7 @@ module.exports = {
         // Check if the page nr is above the min page limit.
         if (requestedPage < minPage) {
             interaction.reply({embeds: [deniedMessage(`Invalid page! The minimum page value is ${minPage}`)]})
-            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (min page) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (min page) reply", `code: "err_int_reply", error: "${error}"`)))
 
             return;
         };
@@ -146,7 +146,7 @@ module.exports = {
         //Check if the page value is below the max page limit.
         if (requestedPage > maxPage) {
             interaction.reply({embeds: [deniedMessage(`Invalid page! The maximum page value is ${maxPage}`)]})
-            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (max page) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (max page) reply", `code: "err_int_reply", error: "${error}"`)))
 
             return;
         };
@@ -154,7 +154,7 @@ module.exports = {
         //Check if the page value exists within the total pages
         if (requestedPage > totalPages) {
             interaction.reply({embeds: [deniedMessage(`This page doesn't exist!`)]})
-            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (totalPages <) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (totalPages <) reply", `code: "err_int_reply", error: "${error}"`)))
 
             return;
         };
