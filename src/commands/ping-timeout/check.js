@@ -1,8 +1,7 @@
-const { EmbedBuilder, inlineCode } = require("@discordjs/builders");
+const { EmbedBuilder } = require("@discordjs/builders");
 
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
-const { PermissionFlagsBits, PermissionsBitField } = require("discord.js");
-const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
+const { PermissionFlagsBits, ApplicationCommandOptionType } = require("discord.js");
 
 const logging = require('../../utils/baseUtils/logging');
 const logTemplates = require('../../utils/baseUtils/logTemplates');
@@ -14,6 +13,15 @@ module.exports = {
     name: "check",
     description: "Check what roles are available for a timeout",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    options: [
+        {
+            name: "page",
+            description: "The page you want to see if there are more than one",
+            type: ApplicationCommandOptionType.Integer,
+            min_value: 1,
+            max_value: 99
+        }
+    ],
 
     //delete: Boolean,
     //devOnly: Boolean,
@@ -23,6 +31,11 @@ module.exports = {
         //Get the first basic vars
         const guildId = interaction.guildId;
         const guildObject = interaction.guild;
+
+        const defaultPage = 1;
+        const maxRolesPerPage = 25;
+        const minPage = 1; //Also set in command min_value;
+        const maxPage = 99; //Also set in command max_value;
 
         // Check if the guild is availabe (if the guild server isn't offline)
         if (!guildObject.available) {
@@ -41,12 +54,15 @@ module.exports = {
             });
             
             return;
-        }
+        };
 
 
         //Get the rest of all required vars
         const clientUser = guildObject.members.me;
         const clientId = clientUser.id;
+
+        const clientRoles = clientUser.roles;
+        const clientHighestRole = clientRoles.highest;
 
         const everyoneRole = guildObject.roles.everyone;
         const everyoneRoleId = everyoneRole.id;
@@ -65,9 +81,18 @@ module.exports = {
             return;
         })
 
-        const clientRole = guildRoles.find((role) => role.tags?.botId === clientId);
 
-        const botHasRequiredPerms = clientUser.permissions.has(PermissionFlagsBits.ManageRoles, PermissionFlagsBits.SendMessages); //TODO: Setup correct perms (maybe use config file for it?)
+        const requiredPerms = [
+            PermissionFlagsBits.ManageRoles,
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.SendMessagesInThreads,
+            PermissionFlagsBits.EmbedLinks,
+            PermissionFlagsBits.UseExternalEmojis,
+            PermissionFlagsBits.UseApplicationCommands
+        ];
+
+        const botHasRequiredPerms = clientUser.permissions.has(requiredPerms);
 
         //Return all roles that aren't managed
         function getUnmanagedRoles(guildRoles) {
@@ -91,21 +116,72 @@ module.exports = {
         if (!eligibleRoles) {
             logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Stopping command, guild doesn't have any roles that could be eligible for a timeout role. code: "inf_check_noEligibleRoles";`));
         
-            interaction.reply({emebds: deniedMessage("No eligible role(s) found")})
+            interaction.reply({embeds: [deniedMessage("No eligible role(s) found")]})
             .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending no eligible role(s) found message.", `code: "err_check_noEligibleRoles"`)))
         }
 
 
+        // Get the roles that corespond to the given page. (Page logic)
+
+        const totalEligibleRoles = eligibleRoles.length;
+        const totalPages = Math.ceil(totalEligibleRoles/maxRolesPerPage);
+
+        const requestedPageOption = interaction.options.getInteger("page");
+        var requestedPage;
+        if (requestedPageOption) {
+            requestedPage = requestedPageOption;
+        } else {
+            requestedPage = defaultPage;
+        };
+
+        // Check if the page nr is above the min page limit.
+        if (requestedPage < minPage) {
+            interaction.reply({embeds: [deniedMessage(`Invalid page! The minimum page value is ${minPage}`)]})
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (min page) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+
+            return;
+        };
+
+
+        //Check if the page value is below the max page limit.
+        if (requestedPage > maxPage) {
+            interaction.reply({embeds: [deniedMessage(`Invalid page! The maximum page value is ${maxPage}`)]})
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (max page) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+
+            return;
+        };
+
+        //Check if the page value exists within the total pages
+        if (requestedPage > totalPages) {
+            interaction.reply({embeds: [deniedMessage(`This page doesn't exist!`)]})
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending invalid page (totalPages <) reply", `code: "err_check_noEligibleRoles", error: "${error}"`)))
+
+            return;
+        };
+
+        const startValue = -maxRolesPerPage+maxRolesPerPage*requestedPage;
+        const endValue = startValue+maxRolesPerPage;
+
+        const roleForPage = Object.values(eligibleRoles).slice(startValue, endValue); //The roles to use for a set page
+
+
         //Check if all required perms are set for a role
-        function roleCompatibilityCheck (botHasRequiredPerms, clientRole, compareRole) {
+        function roleCompatibilityCheck (botHasRequiredPerms, clientHighestRole, compareRole) {
+
             //Check if the bot has all the required perms to do it's functions.
             if (!botHasRequiredPerms) {
-                return "False - Not enough perms";
+                return "False - Bot missing perms";
             }
 
             //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
-            const comparedRolePos = clientRole.comparePositionTo(compareRole)
+            const comparedRolePos = clientHighestRole.comparePositionTo(compareRole)
 
+            if (comparedRolePos === 0) {
+                return "False - Is the bot's highest role"
+            }
+
+
+            //If role is lower
             if (comparedRolePos < 0) {
                 return "False - Bot has role lower"
             }
@@ -120,7 +196,7 @@ module.exports = {
         var roleInDatabaseArray = [];
         var canManageRoleArray = [];
 
-        for (const role of eligibleRoles) {
+        for (const role of roleForPage) {
             const roleId = role.id;
 
             // Format to a correct role tag and add to it the array
@@ -131,7 +207,12 @@ module.exports = {
             // Check if role is in the database
             await roleInDatabase(roleId)
             .then((result) => {
-                roleInDatabaseArray.push(result);
+                if (result == true) {
+                    roleInDatabaseArray.push("True");
+                } else {
+                    roleInDatabaseArray.push("False");
+                }
+                
             })
             .catch((error) => {
                 roleInDatabaseArray.push(error);
@@ -139,7 +220,7 @@ module.exports = {
 
 
             //Check if role can be edited
-            canManageRoleArray.push(roleCompatibilityCheck(botHasRequiredPerms, clientRole, role));
+            canManageRoleArray.push(roleCompatibilityCheck(botHasRequiredPerms, clientHighestRole, role));
 
 
         }
@@ -152,7 +233,9 @@ module.exports = {
             const string = array.toString();
             const newLineString = string.replace(/,/g, "\n");
 
-            return newLineString;
+
+
+            return newLineString.slice(0, 1024);
         }
 
 
@@ -164,14 +247,10 @@ module.exports = {
         {name: "Timed Role", value: arrayToNewlineString(roleInDatabaseArray), inline: true},
         {name: "Bot Can Manage", value: arrayToNewlineString(canManageRoleArray), inline: true}
         )
+        .setFooter({text: `Page ${requestedPage}/${totalPages}`})
         .setTimestamp();
 
         interaction.reply({embeds: [embed]})
         .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `Error: "${error}"`)));
-
-
-
-
-
     }
 };
