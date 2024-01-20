@@ -2,7 +2,6 @@
 
 const { EmbedBuilder, bold } = require("@discordjs/builders");
 const { permsCheck } = require("./permsCheck");
-const compareBotRoleRank = require("./compareBotRoleRank");
 const { aprovedMessage, deniedMessage } = require("../baseUtils/defaultEmbeds");
 
 const logging = require("../baseUtils/logging");
@@ -10,67 +9,112 @@ const logTemplates = require("../baseUtils/logTemplates");
 
 
 module.exports = async (client, roleId, guildId, interaction) => {
-    //get info about the guild and role
-    client.guilds.fetch();
-    const guildInfo = client.guilds.fetch(guildId).catch(error => {
-        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while fetching guild", `Error: ${error}`));
-        return;
-    });
 
-    const systemChannelId = guildInfo.systemChannelId;
+    logging.globalInfo(__filename, `noPermsMessage code started. roleId: ${roleId}`);
 
-    if (!systemChannelId) {
-        logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Guild has no system channel. noPermsMessage NOT send. ${guildId}, roleId: ${roleId}`));
-        return;
-    }
-    
-    var errorEmbed;
+    //Set some global vars
+    var guildObject;
     if (interaction) {
+        guildObject = interaction.guild;
+    } else {
+        guildObject = await client.guilds.fetch(guildId)
+        .catch((error) => logging.error(__filename, `Error fetching guild. guildId: "${guildId}", error: "${error}"`));
+
+        if (!guildObject) return;
+    };
+
+    var messageEmbed;
+    if (interaction) {
+        logging.globalInfo(__filename, `noPermsMessage creating message with interaction. roleId: ${roleId}`);
+
         const messageChannelId = interaction.channelId;
         const messageId = interaction.id;
 
         const messageLink = `https://discord.com/channels/${guildId}/${messageChannelId}/${messageId}`;
-        
+
         errorEmbed = new EmbedBuilder()
-        .setTitle("Timed Role Error")
+        .setTitle("Timeout Role Error")
         .setColor(0xB000)
         .setAuthor({name: interaction.author.globalName, iconURL: interaction.author.avatarURL()})
         .addFields(
             {name: "Role", value: `<@&${roleId}>`, inline: true},
             {name: "Message", value: messageLink, inline: true},
-            {name: "Issue", value: "This timed role has been mentioned by a user but the bot doesn't have the required permissions to edit the role. Check below for more info."},
+            {name: "Issue", value: "A role that is monitored by Ping TimeOut was mentioned by a user. However the bot does not have the required permissions to manage the role. See below for the missing permissions."},
         )
         .setTimestamp();
-        
     } else {
+        logging.globalInfo(__filename, `noPermsMessage creating message withOUT interaction. roleId: ${roleId}`);
+
         errorEmbed = new EmbedBuilder()
-        .setTitle("Timed Role Error")
-        .setColor(0xB000)
+        .setTitle("Timeout Role Issue")
+        .setColor(0Xeb4c34)
         .setAuthor({name: client.user.globalName, iconURL: client.user.avatarURL()})
         .addFields(
             {name: "Role", value: `<@&${roleId}>`, inline: true},
-            {name: "Issue", value: "The bot has tried to make this role mentionable again after the timed time expired but the doesn't have the required permisssions to do that. Check below for more info."},
+            {name: "Issue", value: "A role that is monitored by Ping Timeout its timeout has expired. However the bot does not have the required permissions to manage the role. See below for the missing permissions."},
         )
         .setTimestamp();
-    }
+    };
 
-    guildInfo.channels.fetch();
-    const systemChannelInfo = guildInfo.channels.fetch(systemChannelId).catch(error => {
-        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while fetching channel", `channelId: ${channelId}. Error: ${error}`));
-    });
+    const guildMembers = guildObject.members;
 
-    const permsEmbed = await permsCheck(client, guildId);
+    //Create the rol pos check
+    const botMember = guildMembers.me;
+    const botRoles = botMember.roles;
+    const botHigestRole = botRoles.highest;
 
-    const rolePos = compareBotRoleRank(client, guildId, roleId);
-
-    var rolePosEmbed;
-    if (rolePos > 0) {
-        rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position than the role mentioned!`, "Role Position Check")
-    } else {
-        rolePosEmbed = aprovedMessage(`The bots role has a ${bold('higher')} position than the role mentioned.`, "Role Position Check")
-    }
-
-    await systemChannelInfo.send({embeds: [errorEmbed, permsEmbed, rolePosEmbed]}).catch(error => {
-        logging.error(__filename, logTemplates.commandInteractionException(interaction, "Trying to send a embedded message.", `Error: ${error}`));
+    guildObject.roles.fetch(roleId)
+    .then((compareRole) => {
+        compareRoles(compareRole);
     })
-}
+    .catch((error) => logging.error(__filename, `Error fetching role. roleId: "${roleId}", error: "${error}}"`));
+
+
+    function compareRoles(compareRole) {
+        const posDifference = botHigestRole.comparePositionTo(compareRole);
+
+        var comparedRoleEmbed;
+        if (posDifference > 0) { // Is good, role below the bot
+            comparedRoleEmbed = new EmbedBuilder()
+            .setTitle("Role Position Compare")
+            .setColor(0X5bf531)
+            .setDescription("This role is below the bot's highest role. Bot should be able manage it if the bot has all required permissions")
+            .setTimestamp();
+
+        } else if (posDifference === 0) { //Is bad, bots highest role so it can't manage it
+            comparedRoleEmbed = new EmbedBuilder()
+            .setTitle("Role Position Compare")
+            .setColor(0Xeb4c34)
+            .setDescription("This role is the bot's highest. A bot can only manage roles below it's highest role. A bot/user can never manage it's own highest role")
+            .setTimestamp();
+        } else if (posDifference < 0) { //Is bad, other role is above the bots role
+            comparedRoleEmbed = new EmbedBuilder()
+            .setTitle("Role Position Compare")
+            .setColor(0Xeb4c34)
+            .setDescription("This role is above the bot's highest role. A bot can only manage roles below it's highest role.")
+            .setTimestamp();
+        } else { //In case a unexpected value is present
+            comparedRoleEmbed = new EmbedBuilder()
+            .setTitle("Role Position Compare - Error")
+            .setColor(0Xeb4c34)
+            .setDescription("There was an error comparing roles.")
+            .setTimestamp();
+        };
+        
+        sendMessage(comparedRoleEmbed);
+    };
+
+    async function sendMessage(comparedRoleEmbed) {
+        const permCheckEmbed = await permsCheck(guildObject); //Do the permscheck and get the embed
+
+        const systemChannelObject = guildObject.systemChannel;
+
+        if (!systemChannelObject) {
+            logging.globalInfo(__filename, `Guild has no systemChannel. No perms message NOT send. roleId: "${roleId}", guildId: "${guildId}"`);
+            return;
+        };
+    
+        systemChannelObject.send({embeds: [errorEmbed, comparedRoleEmbed, permCheckEmbed]})
+        .catch((error) => logging.error(__filename, `Error while sending message to a guilds system channel. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`));
+    };
+};
