@@ -1,5 +1,5 @@
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
-const { updateLastMention } = require('../../utils/database/ping-timeout/newMention');
+const { updateLastMentionQuery } = require('../../utils/database/ping-timeout/newMention');
 
 
 
@@ -10,63 +10,72 @@ const { PermissionsBitField } = require('discord.js');
 const noPermsMessage = require('../../utils/ping-timeout/noPermsMessage');
 
 module.exports = async (client, message) => {
-    if(message.author.bot) return;
+    if(message.author.bot) return; //Check if the author is a bot
+    if(!message.mentions.roles.first()) return; //check if the message contains a mention
 
-    //check if the message contains a mention
-    if(!message.mentions.roles.first()) return;
-
-    logging.globalInfo(__filename, logTemplate.messageInteractionCreate(message));
+    //Set some global vars
     const guildId = message.guildId;
 
-    // Check if the user has the mention everyone permission
-    const member = message.member;
+    //LATER: Settings option if this process should ignore members with the mention everyone permission
 
-    if (member.permissions.has(PermissionsBitField.Flags.MentionEveryone)) {
-        logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "User with mention everyone perms mentioned a role"));
-
-        return;
-    }
+    const mentionedRoles = message.mentions.roles;
 
 
-    logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "User without mention everyone perms mentioned a role"));
 
+    for (const [key, value] of mentionedRoles) {
+        const roleId = value.id;
 
-    const mentionedRoles = message.mentions.roles.catch(error => {
-        logging.error(__filename, logTemplate.messageInteractionCustomInfo(message, "Error catching mentioned roles in message"));
-        return;
-    });
-    
-    for(mentionedRole of mentionedRoles) {
-       const roleId = (mentionedRole[1].id);
+        roleInDatabase(roleId)
+        .then((inDatabase) => {
+            if (inDatabase) {
+                processRole(roleId)
+            }
+        })
+        .catch((error) => logging.error(__filename, `Error while checking if role is in database. roleId: "${roleId}", error: "${error}"`));
+    };
 
-        const inDatabase = await roleInDatabase("", roleId);
-        if (inDatabase === true) {
+    return; //End of normal code 
 
-            logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "A timed role got mentioned", `RoleId: ${roleId}`));
+    function processRole(roleId) {
+        logging.globalInfo(__filename, `A Timeout role got mentioned. roleId: ${roleId}`);
 
-            //Catch the mentioned role.
-            message.guild.roles.fetch(roleId)
-            .then(role => role.setMentionable(false, "Ping TimeOut role got mentioned. Made unmentionable"))
-            .then(() => logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Made role unmentionable", `roleId: ${roleId}`)))
-            .then(role => {
-                updateLastMention(role.id, new Date(), "false"); //Set the mentionable state in the database to false
-                logging.globalInfo(__filename, logTemplate.messageInteractionCustomInfo(message, "Set the mentionable state in the database to 'False'", `roleId: ${role.id}`));
+        
+
+        client.guilds.fetch(guildId)
+        .then((guildObject) => guildObject.roles.fetch(roleId))
+        .then((roleObject) => makeRoleUnMentionable(roleObject))
+        .catch((error) => logging.error(__filename, `Error fetching guild/role. error: "${error}"`));
+
+        function makeRoleUnMentionable(roleObject) {
+            roleObject.setMentionable(false, "Timeout role got mentioned")
+            .then(() => {
+                logging.globalInfo(__filename, `Timeout role got mentioned and made unmentionable. roleId: "${roleId}", guildId: "${guildId}"`);
+
+                updateLastMentionQuery(roleId)
+                .then(() => logging.globalInfo(__filename, `Timeout role got mentioned, made unmentionable and database got updated. roleId: "${roleId}", guildId: "${guildId}"`))
+                .catch((error) => {
+                    logging.error(__filename, `Error while updating role in database, trying to make role mentionable again. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`);
+
+                    makeRoleMentionable(roleObject, false);
+                })
             })
-            .catch(error => {
-                if (error.code === 10011) { //Unknown role
-                    logging.globalWarn(__filename, logTemplate.messageInteractionCustomInfo(message, 'Known error "Unkown role" while: catching a role by id/making unmentionable;', `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`));
-                    return;
-                } else if (error.code === 50013) { //You lack permissions to perform that action
-                    logging.globalWarn(__filename, logTemplate.messageInteractionCustomInfo(message, 'Known error "You lack permissions to perform that action" while making a role unmentionable;', `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`));
-                    noPermsMessage(client, role.id, guildId, message);
-                    return;
-                } else { //When a not expected error happens
-                    logging.warn(__filename, logTemplate.messageInteractionCustomInfo(message, "Unexpected error while making role unmentionable", `guildId: ${guildId}, roleId: ${roleId}, error: ${error}`))
-                    return;
-                }
+            .catch((error) => {
+                if (error.code === 10011) {
+                    logging.globalWarn(__filename, `Tried making a unknown role unmentionable. error: ${error}`);
+                } else if (error.code === 50013) {
+                    logging.globalInfo(__filename, `Tried making a role unmentionable but the bot doesn't have the perms to do that. roleId: "${roleId}", guildId: "${guildId}"`)
+                    	noPermsMessage(client, roleId, guildId);
+                } else {
+                    logging.error(__filename, `Error while making role unmentionable. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`);
+                };
+
+                //TODO: Set this role to InError
             });
-        }
-    }
+        };
 
-
-}
+        function makeRoleMentionable(roleObject) { //To make the role mentionable again in case that the database query fails.
+            roleObject.setMentionable(true, "Remade role mentionable due to a database error preveting the bot to work")
+            .catch((error) => logging.error(__filename, `Error while remaking a role mentionable due to a database error. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`));
+        };
+    };
+};
