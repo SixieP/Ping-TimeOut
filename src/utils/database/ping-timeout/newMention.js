@@ -4,35 +4,39 @@ const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 const promisePool = pool.promise();
 
-async function updateLastMention(interaction,  roleId, lastMention, mentionable) {
-    logging.verboseInfo(__filename, `updateLastMention, interactionId: ${interaction.id} | Query executed`);
-    var mentionInt;
+async function updateLastMentionQuery(roleId, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "updateLastMentionQuery" function and query');
+
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
     if (mentionable === true) {
-        mentionInt = 1;
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
-    
-    try {
-        await promisePool.execute(`
+        mentionable = 0;
+    };
+
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set 
-        lastMention = ?,
+        lastMention = NOW(),
         mentionable = ?
         where
-        roleId = ?`, [lastMention, mentionInt, roleId ])
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `updateLastMention, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` updateLastMention, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+        roleId = ?`, [mentionable, roleId])
+    })
+    .then(() => {
+        logging.verboseInfo(__filename, 'Successfully executed "updateLastMentionQuery" query');
+
+        resolve("ok");
+    })
+    .catch((error) => {
+        logging.error(__filename, `Error executing "updateLastMentionQuery" query. code": "err_datab_updRol", roleId: "${roleId}", errCode: "${error.code}", error: "${error}"`);
+
+        reject(error);
+    });
+};
 
 //make functions global
 module.exports = { 
-    updateLastMention,
+    updateLastMentionQuery,
 };
