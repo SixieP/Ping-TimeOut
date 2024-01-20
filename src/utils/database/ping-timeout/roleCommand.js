@@ -76,8 +76,8 @@ function removeTimedRoleQuery (roleId) {
 
     return new Promise(function(resolve, reject) {
         promisePool.execute(`
-        DELETE FROM roles WHERE roleId = ? and guildId = ?`,
-        [roleId, guildId])
+        DELETE FROM roles WHERE roleId = ?`,
+        [roleId])
         .then(() => {
             logging.verboseInfo(__filename, 'Successfully executed "removeTimedRoleQuery" query');
 
