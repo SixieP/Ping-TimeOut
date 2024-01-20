@@ -5,82 +5,79 @@ const pool = connectDatabase();
 const promisePool = pool.promise();
 
 async function getNotMentionableRoles(interaction, guildId) {
-    logging.verboseInfo(__filename, `getNotMentionableRoles, interactionId: ${interaction?.id} | Query executed`);
-    try {
-        if (!guildId) {
-            const [ roles ] = await promisePool.execute(`
-            select * from roles
-            where
-            mentionable = 0`, 
-            [guildId]);
-            return roles;
-        } else {
-            const [ roles ] = await promisePool.execute(`
-            select * from roles
-            where
-            guildId = ?
-            and
-            mentionable = 0`, 
-            [guildId]);
-            return roles;
-        }
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `getNotMentionableRoles, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` getNotMentionableRoles, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+    logging.verboseInfo(__filename, 'Executing "getNotMentionableRoles" function and query');
+
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
+        select * from roles
+        where
+        mentionable = 0`, 
+        [guildId])
+        .then(([value]) => {
+            logging.verboseInfo(__filename, 'Successfully executed "getNotMentionableRoles" query');
+
+            resolve(value);
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "getNotMentionableRoles" query. code": "err_datab_gtMenRols", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+        });
+    });
+};
 
 async function updateSetMentionable (interaction, roleId) {
-    logging.verboseInfo(__filename, `updateSetMentionable, interactionId: ${interaction?.id} | Query executed`);
-    try {
-        await promisePool.execute(`
+    logging.verboseInfo(__filename, 'Executing "updateSetMentionable" function and query');
+
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set 
         mentionable = 1,
         inError = 0
         where
         roleId = ?`, [ roleId ])
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `updateSetMentionable, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` updateSetMentionable, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "updateSetMentionable" query');
+
+            resolve("ok");
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "updateSetMentionable" query. code": "err_datab_updRol", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+        });
+    });
+};
 
 async function databaseRoleErrorState (interaction, roleId, errorState = true) {
-    logging.verboseInfo(__filename, `databaseRoleErrorState, interactionId: ${interaction?.id} | Query executed`);
-    var setErrorState;
+    logging.verboseInfo(__filename, 'Executing "databaseRoleErrorState" function and query');
+
     if (errorState === false | errorState === 0) {
-        setErrorState = 0
+        errorState = 0;
     } else {
-        setErrorState = 1
-    }
-    try {
-        await promisePool.execute(`
+        errorState = 1;
+    };
+
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set 
         inError = ?
         where
-        roleId = ?`, [ setErrorState, roleId ])
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `databaseRoleErrorState, interactionId: ${interaction?.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` databaseRoleErrorState, interactionId: ${interaction?.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+        roleId = ?`, [errorState, roleId ])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "databaseRoleErrorState" query');
+
+            resolve("ok");
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "databaseRoleErrorState" query. code": "err_datab_updRol", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+        });
+    });
+};
 
 //make functions global
 module.exports = { 
