@@ -18,7 +18,7 @@ module.exports = (client, role) => {
 
     function removeRole() {
         removeTimedRoleQuery(roleId)
-        .then(() => logging.globalInfo(__filename, `Successfully remove a role that got remove from discord. roleId: ${roleId}`))
+        .then(() => logging.globalInfo(__filename, `Successfully removed a role that got remove from discord. roleId: ${roleId}`))
         .catch((error) => logging.error(__filename, `Error removing role that got removed from discord. error: ${error}`));
     };
 };
