@@ -4,15 +4,14 @@ const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 const promisePool = pool.promise();
 
-async function getNotMentionableRoles(interaction, guildId) {
+async function getNotMentionableRoles() {
     logging.verboseInfo(__filename, 'Executing "getNotMentionableRoles" function and query');
 
     return new Promise(function(resolve, reject) {
         promisePool.execute(`
         select * from roles
         where
-        mentionable = 0`, 
-        [guildId])
+        mentionable = 0`)
         .then(([value]) => {
             logging.verboseInfo(__filename, 'Successfully executed "getNotMentionableRoles" query');
 
@@ -26,7 +25,7 @@ async function getNotMentionableRoles(interaction, guildId) {
     });
 };
 
-async function updateSetMentionable (interaction, roleId) {
+async function updateSetMentionable (roleId) {
     logging.verboseInfo(__filename, 'Executing "updateSetMentionable" function and query');
 
     return new Promise(function(resolve, reject) {
@@ -50,7 +49,7 @@ async function updateSetMentionable (interaction, roleId) {
     });
 };
 
-async function databaseRoleErrorState (interaction, roleId, errorState = true) {
+async function databaseRoleErrorState (roleId, errorState = true) {
     logging.verboseInfo(__filename, 'Executing "databaseRoleErrorState" function and query');
 
     if (errorState === false | errorState === 0) {
