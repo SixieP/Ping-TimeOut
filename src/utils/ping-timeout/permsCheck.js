@@ -1,21 +1,22 @@
-const { EmbedBuilder, inlineCode, bold, InviteTargetType, italic } = require("discord.js");
+const { EmbedBuilder, inlineCode, bold, italic, PermissionFlagsBits } = require("discord.js");
 
-function permsCheck(client, guildId) {
-    //permscheck - fullPerms: 277294107648
-    const botId = client.user.id;
+async function permsCheck(guildObject) {
 
-    if (!botId) return;
-    const botUser = client.guilds.cache.get(guildId).members.cache.get(botId);
+    //Get information about the bot user
+    const guildMembersObject = guildObject.members;
+    const clientUserObject = guildMembersObject.me;
 
-    const hasRequiredPerms = botUser.permissions.has(277294107648n);
+    const hasRequiredPerms = clientUserObject.permissions.has(277294107648n);
+    
+
 
     //embed
 
     if (hasRequiredPerms) {
         const diagnosticsEmbed = new EmbedBuilder()
-        .setColor(0xB000)
-        .setTitle('Permission Check')
-        .setDescription(':white_check_mark: The bot has all required permissions')
+        .setColor(0X5bf531)
+        .setTitle('Permission Check - Success')
+        .setDescription(":white_check_mark: The bot has all required permissions")
         .setTimestamp();
 
         return diagnosticsEmbed;
@@ -26,18 +27,18 @@ function permsCheck(client, guildId) {
 
         //all required perms
         const permissions = [
-            {permName: "Manage Roles" ,permValue: "268435456"},
-            {permName: "Read Messages/View Channels" ,permValue: "1024"},
-            {permName: "Send Messages" ,permValue: "2048"},
-            {permName: "Send Messages in Threads" ,permValue: "274877906944"},
-            {permName: "Embed Links" ,permValue: "16384"},
-            {permName: "Use External Emojis" ,permValue: "262144"},
-            {permName: "Use Slash Commands" ,permValue: "2147483648"},
+            {permName: "Manage Roles" ,permValue: PermissionFlagsBits.ManageRoles},
+            {permName: "Read Messages/View Channels" ,permValue: PermissionFlagsBits.ViewChannel},
+            {permName: "Send Messages" ,permValue: PermissionFlagsBits.SendMessages},
+            {permName: "Send Messages in Threads" ,permValue: PermissionFlagsBits.SendMessagesInThreads},
+            {permName: "Embed Links" ,permValue: PermissionFlagsBits.EmbedLinks},
+            {permName: "Use External Emojis" ,permValue: PermissionFlagsBits.UseExternalEmojis},
+            {permName: "Use Slash Commands" ,permValue: PermissionFlagsBits.UseApplicationCommands},
         ];
 
         //check every perm
-        for (permission of permissions) {
-            const hasRequiredPerm = botUser.permissions.has(permission.permValue);
+        for (const permission of permissions) {
+            const hasRequiredPerm = clientUserObject.permissions.has(permission.permValue);
 
             hasPermission = hasPermission + inlineCode(hasRequiredPerm) + `\n`;
 
@@ -51,8 +52,8 @@ function permsCheck(client, guildId) {
 
 
         const diagnosticsEmbed = new EmbedBuilder()
-        .setColor(0xC83400)
-        .setTitle('Permission Check FAILED')
+        .setColor(0Xeb4c34)
+        .setTitle('Permission Check - FAILED')
         .addFields(
             {
                 name: 'Permission',
@@ -66,7 +67,7 @@ function permsCheck(client, guildId) {
             },
         )
         .setTimestamp();
-
+        
         return diagnosticsEmbed;
     }
 }
