@@ -421,11 +421,11 @@ module.exports = {
                         };
                     };
 
-                    if (!roleMemberCount) {
+                    if (roleMemberCount === null || roleMemberCount == "unknown") {
                         roleMemberCount = "Err | Can't fetch role";
                     };
 
-                    if (!roleColor) {
+                    if (roleColor === null || roleColor == "unknown") {
                         roleColor = 0;
                     };
 
