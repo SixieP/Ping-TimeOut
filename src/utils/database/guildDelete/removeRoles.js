@@ -4,26 +4,29 @@ const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
 const promisePool = pool.promise();
 
-async function removeAllGuildRoles(interaction, guildId) {
-    logging.verboseInfo(__filename, `removeAllGuildRoles, interactionId: ${interaction.id} | Query executed`);
-    try {
-        const [ roles ] = await promisePool.execute(`
+async function removeAllGuildRoles(guildId) {
+    logging.verboseInfo(__filename, 'Executing "removeAllGuildRoles" function and query');
+
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
         delete from roles
         where
         guildId = ?`,
-        [guildId]);
+        [guildId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "removeAllGuildRoles" query');
 
-        return roles;
-    } catch (error) {
-        if (error.code === "econnrefused") {
-            logging.error(__filename, `removeAllGuildRoles, interactionId: ${interaction.id} | Error connecting to database: ${error}`);
-            return "err_ECONNREFUSED";
-        } else {
-            logging.error(__filename, ` removeAllGuildRoles, interactionId: ${interaction.id} | There was an issue executing a database query: ${error}`);
-            return "err_error";
-        }
-    }
-}
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "removeAllGuildRoles" query. code": "err_datab_dellAllRoles", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
 
 //make functions global
 module.exports = { 
