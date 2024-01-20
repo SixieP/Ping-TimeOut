@@ -586,7 +586,7 @@ module.exports = {
             };
 
             function removeRole(mentionable) {
-                removeTimedRoleQuery(commandOptionRoleId, guildId)
+                removeTimedRoleQuery(commandOptionRoleId)
                 .then(() => removeSuccess())
                 .catch((error) => {
                     logging.error(__filename, `Error creating role. code: "err_datab_rolco_remRol", errCode: ${error.code}, roleId: "${commandOptionRoleId}", guildId: "${guildId}", timeoutDuration: ""${timeoutDuration}, mentionable: "${mentionable}"`);

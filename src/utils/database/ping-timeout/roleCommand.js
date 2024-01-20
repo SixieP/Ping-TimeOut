@@ -71,7 +71,7 @@ function editTimedRoleQuery (roleId, timeoutDuration, mentionable) {
     });
 }
 
-function removeTimedRoleQuery (roleId, guildId) {
+function removeTimedRoleQuery (roleId) {
     logging.verboseInfo(__filename, 'Executing "removeTimedRoleQuery" function and query');
 
     return new Promise(function(resolve, reject) {
