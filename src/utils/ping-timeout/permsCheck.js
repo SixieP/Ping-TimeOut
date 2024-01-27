@@ -8,9 +8,17 @@ async function permsCheck(guildObject) {
     const guildMembersObject = guildObject.members;
     const clientUserObject = guildMembersObject.me;
 
-    const hasRequiredPerms = clientUserObject.permissions.has(277294107648n);
-    
+    const requiredPerms = [
+        PermissionFlagsBits.ManageRoles,
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.SendMessagesInThreads,
+        PermissionFlagsBits.EmbedLinks,
+        PermissionFlagsBits.UseExternalEmojis,
+        PermissionFlagsBits.UseApplicationCommands
+    ];
 
+    const hasRequiredPerms = clientUserObject.permissions.has(requiredPerms);
 
     //embed
 
