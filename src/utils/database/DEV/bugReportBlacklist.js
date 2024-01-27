@@ -5,7 +5,7 @@ const pool = connectDatabase();
 const promisePool = pool.promise();
 
 //add a user to the blacklist
-async function addUserToBlacklist(interaction, userId, date, reason) {
+async function addUserToBlacklist(userId, date, reason) {
     logging.verboseInfo(__filename, 'Executing "blacklistedUser" function and query');
 
     return new Promise(function (resolve, reject) {
@@ -16,10 +16,10 @@ async function addUserToBlacklist(interaction, userId, date, reason) {
         (?, ?, ?)
         `,
         [userId, date, reason,])
-        .then(([results]) => {
+        .then(([value]) => {
             logging.verboseInfo(__filename, 'Successfully executed "blacklistedUser" query');
 
-            resolve(results);
+            resolve(value);
         })
         .catch((error) => {
             logging.error(__filename, `Error executing "blacklistedUser" query. code": "err_datab_getRoles_byGui", errCode: "${error.code}", error: "${error}"`);
@@ -31,7 +31,7 @@ async function addUserToBlacklist(interaction, userId, date, reason) {
 };
 
 //remove a user from the blacklist
-async function removeUserFromBlacklist(interaction, userId) {
+async function removeUserFromBlacklist(userId) {
     logging.verboseInfo(__filename, 'Executing "blacklistedUser" function and query');
 
     return new Promise(function (resolve, reject) {
@@ -41,10 +41,10 @@ async function removeUserFromBlacklist(interaction, userId) {
         userId = ?
         `,
         [userId])
-        .then(([results]) => {
+        .then(([value]) => {
             logging.verboseInfo(__filename, 'Successfully executed "blacklistedUser" query');
 
-            resolve(results);
+            resolve(value);
         })
         .catch((error) => {
             logging.error(__filename, `Error executing "blacklistedUser" query. code": "err_datab_getRoles_byGui", errCode: "${error.code}", error: "${error}"`);
@@ -66,10 +66,10 @@ async function blacklistedUser(userId) {
         userId = ?;
         `,
         [userId])
-        .then(([results]) => {
+        .then(([value]) => {
             logging.verboseInfo(__filename, 'Successfully executed "blacklistedUser" query');
 
-            resolve(results);
+            resolve(value);
         })
         .catch((error) => {
             logging.error(__filename, `Error executing "blacklistedUser" query. code": "err_datab_getRoles_byGui", errCode: "${error.code}", error: "${error}"`);
