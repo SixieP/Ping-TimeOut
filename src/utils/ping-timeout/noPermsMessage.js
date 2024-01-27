@@ -1,21 +1,32 @@
 //sends a message to the guilds system message channel that the bot has no perms
 
-const { EmbedBuilder, bold } = require("@discordjs/builders");
+const { EmbedBuilder } = require("@discordjs/builders");
 const { permsCheck } = require("./permsCheck");
-const { aprovedMessage, deniedMessage } = require("../baseUtils/defaultEmbeds");
 
 const logging = require("../baseUtils/logging");
 const logTemplates = require("../baseUtils/logTemplates");
 
+const { statGetRole } = require("../database/DEV/stats");
 
-module.exports = async (client, roleId, guildId, interaction) => {
 
-    logging.globalInfo(__filename, `noPermsMessage code started. roleId: ${roleId}`);
+module.exports = (client, roleId, guildId, message) => {
+    logging.globalInfo(__filename, `executing noPermsMessage. guildId: "${guildId}', roleId: "${roleId}"`);
+
+    statGetRole(roleId)
+    .then(([value]) => {
+        if (!value.inError) {
+            runCode();
+        };
+    })
+    .catch((error) => logging.error(__filename, `Error getting timeout role from database. roleId: "${roleId}", error: "${error}'`));
+
+    async function runCode() {
+        logging.globalInfo(__filename, `noPermsMessage code started. roleId: ${roleId}`);
 
     //Set some global vars
     var guildObject;
-    if (interaction) {
-        guildObject = interaction.guild;
+    if (message) {
+        guildObject = message.guild;
     } else {
         guildObject = await client.guilds.fetch(guildId)
         .catch((error) => logging.error(__filename, `Error fetching guild. guildId: "${guildId}", error: "${error}"`));
@@ -23,19 +34,18 @@ module.exports = async (client, roleId, guildId, interaction) => {
         if (!guildObject) return;
     };
 
-    var messageEmbed;
-    if (interaction) {
-        logging.globalInfo(__filename, `noPermsMessage creating message with interaction. roleId: ${roleId}`);
+    var errorEmbed;
+    if (message) {
+        logging.globalInfo(__filename, `noPermsMessage creating message with message. roleId: ${roleId}`);
 
-        const messageChannelId = interaction.channelId;
-        const messageId = interaction.id;
+        const messageChannelId = message.channelId;
+        const messageId = message.id;
 
         const messageLink = `https://discord.com/channels/${guildId}/${messageChannelId}/${messageId}`;
 
         errorEmbed = new EmbedBuilder()
         .setTitle("Timeout Role Error")
-        .setColor(0xB000)
-        .setAuthor({name: interaction.author.globalName, iconURL: interaction.author.avatarURL()})
+        .setColor(0Xeb4c34)
         .addFields(
             {name: "Role", value: `<@&${roleId}>`, inline: true},
             {name: "Message", value: messageLink, inline: true},
@@ -43,12 +53,11 @@ module.exports = async (client, roleId, guildId, interaction) => {
         )
         .setTimestamp();
     } else {
-        logging.globalInfo(__filename, `noPermsMessage creating message withOUT interaction. roleId: ${roleId}`);
+        logging.globalInfo(__filename, `noPermsMessage creating message withOUT message. roleId: ${roleId}`);
 
         errorEmbed = new EmbedBuilder()
         .setTitle("Timeout Role Issue")
         .setColor(0Xeb4c34)
-        .setAuthor({name: client.user.globalName, iconURL: client.user.avatarURL()})
         .addFields(
             {name: "Role", value: `<@&${roleId}>`, inline: true},
             {name: "Issue", value: "A role that is monitored by Ping Timeout its timeout has expired. However the bot does not have the required permissions to manage the role. See below for the missing permissions."},
@@ -117,4 +126,5 @@ module.exports = async (client, roleId, guildId, interaction) => {
         systemChannelObject.send({embeds: [errorEmbed, comparedRoleEmbed, permCheckEmbed]})
         .catch((error) => logging.error(__filename, `Error while sending message to a guilds system channel. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`));
     };
+    }
 };
