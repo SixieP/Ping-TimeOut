@@ -1,6 +1,7 @@
 const { roleInDatabase } = require('../../utils/database/ping-timeout/general');
 const { updateLastMentionQuery } = require('../../utils/database/ping-timeout/newMention');
 
+const { databaseRoleErrorState, } = require("../../utils/database/ping-timeout/makeMentionable");
 
 
 const logging = require('../../utils/baseUtils/logging');
@@ -64,12 +65,13 @@ module.exports = async (client, message) => {
                     logging.globalWarn(__filename, `Tried making a unknown role unmentionable. error: ${error}`);
                 } else if (error.code === 50013) {
                     logging.globalInfo(__filename, `Tried making a role unmentionable but the bot doesn't have the perms to do that. roleId: "${roleId}", guildId: "${guildId}"`)
-                    	noPermsMessage(client, roleId, guildId);
+                    	noPermsMessage(client, roleId, guildId, message);
                 } else {
                     logging.error(__filename, `Error while making role unmentionable. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`);
                 };
 
-                //TODO: Set this role to InError
+                databaseRoleErrorState(roleId)
+                .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
             });
         };
 
