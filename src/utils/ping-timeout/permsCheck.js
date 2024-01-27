@@ -1,6 +1,8 @@
 const { EmbedBuilder, inlineCode, bold, italic, PermissionFlagsBits } = require("discord.js");
+const logging = require('../baseUtils/logging');
 
 async function permsCheck(guildObject) {
+    logging.globalInfo(__filename, `Executing permsCheck code. guildId: "${guildObject?.id}"`);
 
     //Get information about the bot user
     const guildMembersObject = guildObject.members;
