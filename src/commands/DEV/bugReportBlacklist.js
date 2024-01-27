@@ -68,7 +68,7 @@ module.exports = {
         const commGroup = interaction.options.getSubcommandGroup();
         const commName = interaction.options.getSubcommand();
 
-        if (commGroup === "user") {
+        if (commGroup === "user") { //TODO: Fix code below, can't submit no reason anymore
             if (commName === "blacklist") {
                 const userId = interaction.options.get('user-id').value;
                 const reason = interaction.options.get('reason')?.value;
