@@ -29,6 +29,8 @@ module.exports = {
                     description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
+                    minValue: 1,
+                    maxValue: 365,
                 },
                 {
                     name: "timeout-magnitude",
@@ -68,6 +70,8 @@ module.exports = {
                     description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
+                    minValue: 1,
+                    maxValue: 365,
                 },
                 {
                     name: "timeout-magnitude",
@@ -265,8 +269,11 @@ module.exports = {
                     reject("err_option_get");
                     return;
                 }
+
+                //Check if the timeoutDuraction is greater than the max. If so stop code.
+                if (commandOptionTimeoutDuration > 365) return;
                 
-                //Try getting commandOptionTimeoutDuration. Catch if not found
+                //Try getting commandOptionTimeoutMagnitude. Catch if not found
                 try {
                     commandOptionTimeoutMagnitude = interaction.options.getInteger("timeout-magnitude", true);
                 } catch (error) {
