@@ -164,9 +164,15 @@ module.exports = {
                 if (roleMentionable === 0) { //If not mentionable = rest time active
                     const timeoutEndTimeSec = lastMentionDateSec + timeoutTimeSec;
 
-                    const roundToNearestMinSecs = 60-timeoutEndTimeSec%60;
+                    if (timeoutEndTimeSec > dateNowSecRounded) { //If the rest time if higher than the current time. Otherwise it points to an error with the bot perms.
+                        const roundToNearestMinSecs = 60-timeoutEndTimeSec%60;
 
-                    restTime = `<t:${timeoutEndTimeSec+roundToNearestMinSecs}:R>`;
+                        restTime = `<t:${timeoutEndTimeSec+roundToNearestMinSecs}:R>`;
+                    } else {
+                        restTime = "Bot perms err";
+                    };
+
+                    
     
                 } else {
                     restTime = "--:--";
