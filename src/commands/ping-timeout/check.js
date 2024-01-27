@@ -183,7 +183,7 @@ module.exports = {
 
             //If role is lower
             if (comparedRolePos < 0) {
-                return "False - Bot has role lower"
+                return "False - Bot higest role too low"
             }
 
             //If nothing else returned ealier it ok to manage
