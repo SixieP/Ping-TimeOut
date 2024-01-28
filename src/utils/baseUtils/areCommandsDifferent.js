@@ -92,7 +92,7 @@ module.exports = (existingCommand, localCommand) => {
   //compare local and exiting options
   function areOptionsDifferent(localOption, existingOption) {
     if (
-      localOption.type !== existingOption.type ||
+      localOption.type !== existingOption?.type ||
       localOption.description !== existingOption.description ||
       (localOption.required || false) !== (existingOption.required || false) ||
       (localOption.choices?.lenght || 0) !== (existingOption.choices?.lenght || 0) ||

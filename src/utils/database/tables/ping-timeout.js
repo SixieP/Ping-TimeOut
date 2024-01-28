@@ -1,10 +1,15 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
-const { logging } = require('../../baseUtils/logging');
+const promisePool = pool.promise();
+
 
 module.exports = async () => {
     try {
-        const [result] = await pool.query(`
+        logging.verboseInfo(__filename, 'Checking if table "roles" exists');
+
+        const [result] = await promisePool.query(`
         create table if not exists roles(
             roleId VARCHAR(32) not null PRIMARY KEY,
             guildId VARCHAR(32) not null,
@@ -15,23 +20,24 @@ module.exports = async () => {
             )
         `);
         if (result.warningStatus === 0) {
-            logging("info", 'Created the non existing table "roles"', "database/tables/ping-timeout.js");
+            logging.info(__filename, 'Created the non existing table "roles"');
         }
 
     } catch (error) {
-        logging("error", `There was an error creating a non-existing table "roles": ${error}`, "database/tables/ping-timeout.js");
+        logging.error(__filename, `There was an error creating a non-existing table "roles" | Error: ${error}`)
     }
 
     try {
-        const [result] = await pool.query(`
+        logging.verboseInfo(__filename, 'Checking if table "roles" has the column "inError"');
+        const [result] = await promisePool.query(`
         alter table roles
         add inError boolean;
         `);
-        logging("info", 'Created the non existing column "inError" in table "roles"', "database/tables/ping-timeout.js");
+        logging.info(__filename, 'Created the non existing column "inError" in table "roles"');
 
     } catch (error) {
         if (error.code !== "ER_DUP_FIELDNAME") {
-            logging("error", `There was an error creating a non-existing table "roles": ${error}`, "database/tables/ping-timeout.js");
+            logging.error(__filename, `There was an error creating a non-existing column "inError" in table "roles" | Error: ${error}`);
         }
     }
 }

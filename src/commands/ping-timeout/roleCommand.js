@@ -1,10 +1,12 @@
-const { ApplicationCommandOptionType, PermissionFlagsBits, inlineCode, bold } = require("discord.js");
-const { newTimeOutRole, updateTimeoutTime, removeTimeoutRole, makeMentionable } = require("../../utils/database/ping-timeout/roleCommand");
+const { ApplicationCommandOptionType, PermissionFlagsBits } = require("discord.js");
+const { createNewTimedroleQuery, editTimedRoleQuery, removeTimedRoleQuery, resetTimerTimedRoleQuery} = require("../../utils/database/ping-timeout/roleCommand");
 const { roleInDatabase } = require("../../utils/database/ping-timeout/general");
-const { aprovedMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
-const { logging } = require("../../utils/baseUtils/logging");
-const { permsCheck } = require("../../utils/ping-timeout/permsCheck");
-const compareBotRoleRank = require("../../utils/ping-timeout/compareBotRoleRank");
+
+const logging = require("../../utils/baseUtils/logging");
+const logTemplates = require("../../utils/baseUtils/logTemplates");
+
+const { aprovedMessage, warnMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
+const defaultMessages = require("../../utils/defaults/messages/defaultMessages");
 
 module.exports = {
     name: "timed-role",
@@ -27,6 +29,8 @@ module.exports = {
                     description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
+                    minValue: 1,
+                    maxValue: 365,
                 },
                 {
                     name: "timeout-magnitude",
@@ -66,6 +70,8 @@ module.exports = {
                     description: "How long a role should timeout for when pinged",
                     required: true,
                     type: ApplicationCommandOptionType.Integer,
+                    minValue: 1,
+                    maxValue: 365,
                 },
                 {
                     name: "timeout-magnitude",
@@ -128,287 +134,556 @@ module.exports = {
     //testCommand: Boolean,
 
     callback: async (client, interaction) => {
-        commandName = interaction.options._subcommand;
-        guildId = interaction.guildId;
 
-        //make it so that @everyone can't ping all the roles if that already isn't the case
-        const everyoneRole = client.guilds.cache.get(guildId).roles.everyone
+        // === Set global used vars ===
 
-        if (everyoneRole.permissions.has(PermissionFlagsBits.MentionEveryone)) {
-            const newRolePerms = everyoneRole.permissions.remove([PermissionFlagsBits.MentionEveryone]);
-            everyoneRole.setPermissions(newRolePerms, "Bot doesn't function corretly when @everyone can mention all roles");
-        };
+        const requiredPerms = [
+            PermissionFlagsBits.ManageRoles,
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.SendMessagesInThreads,
+            PermissionFlagsBits.EmbedLinks,
+            PermissionFlagsBits.UseExternalEmojis,
+            PermissionFlagsBits.UseApplicationCommands
+        ];
 
-        //logic for the "add" command
-        if (commandName === "add") {
-            const roleId = interaction.options.get('role').value;
+        const guildId = interaction.guildId;
+        const guildObject = interaction.guild;
 
-            if (await roleInDatabase(roleId) === true) {
-                interaction.reply({embeds: [deniedMessage(`This role already is a timeout role`)], ephemeral: true})
-                logging("rolecommand.js-notok", `${roleId} | This role already is a timeout role`, "add", true)
-                return;
-            }
+        // Check if the guild is availabe (if the guild server isn't offline)
+        if (!guildObject.available) {
+            logging.verboseWarn(__filename, logTemplates.commandInteractionException(interaction, "Guild not availabe", `guildId: ${guildId}, errId: "err_Unavail_Guild"`));
 
-            if (roleId === interaction.guild.roles.everyone.id) {
-                interaction.reply({embeds: [deniedMessage(`Can't add a timeout to @everyone`)], ephemeral: true})
-                logging("rolecommand.js-notok", `input: ${roleId}, @everyone: ${interaction.guild.roles.everyone.id} | Can't add a timeout to @everyone`, "add", true)
-                return;
-            }
-
-            const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
-            if (role.managed) {
-                logging("rolecommand.js-notok", `${role} | Can't add a timeout to the role cause the role is managed by a bot <@&${roleId}>`, "add", true)
-                interaction.reply({embeds: [deniedMessage(`Can't add a timeout to the role cause the role is managed by a bot <@&${roleId}>`)], ephemeral: true})
-                return;
-            }
-
-            const timeoutDur = interaction.options.get('timeout-duration').value;
-            const timeoutMag = interaction.options.get('timeout-magnitude').value;
-            var timeoutTime;
-            if (timeoutMag === 0) {
-                timeoutTime = timeoutDur;
-            }
-            if(timeoutMag === 1) {
-                timeoutTime = timeoutDur*60;
-            }
-            if (timeoutMag === 2) {
-                timeoutTime = timeoutDur*60*24;
-            };
-
-            var mentionableError;
-            await role.setMentionable(true).catch(error => {
-                logging("rolecommand.js-notok", `${error} | noPerms`, "add", true)
-                if (error.code === 50013) {
-                    mentionableError = "noPerms";
-                } else {
-                    mentionableError = error;
-                    logging("roleCommand.js", error, "add")
-                }
-                
-            });
-
-            if (mentionableError === "noPerms") {
-                const rolePos = compareBotRoleRank(client, guildId, roleId);
-
-                var rolePosEmbed;
-                if (rolePos > 0) {
-                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                } else {
-                    rolePosEmbed = aprovedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                }
-
-
-                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, guildId), rolePosEmbed], ephemeral: true})
-                return;
-            }
-            if (mentionableError) {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(error)}. Please try again later`)], ephemeral: true})
-                return;
-            }
-
-            const newTimeOutRespone = await newTimeOutRole(roleId, guildId, timeoutTime, true);
-            if (newTimeOutRespone === "error") {
-                logging("rolecommand.js-notok", `${interaction.guildId}, ${inlineCode(roleId, guildId, timeoutTime)} | There was an error executing this command. Please try again later`, "add-newTimeOutResponse", true);
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
-                return;
-            } else {
-                logging("rolecommand.js-ok", `${interaction.guildId}, ${inlineCode(roleId, guildId, timeoutTime)} | Successfully added this role as a timeout role`, "add-newTimeOutResponse", true);
-                interaction.reply({embeds: [aprovedMessage(`Successfully added this role as a timeout role`)], ephemeral: true})
-                return;
-            }
-        };
-        if (commandName === "edit") {
-            const guildId = interaction.guildId;
-            const roleId = interaction.options.get('role').value;
-
-            if (await roleInDatabase(roleId) === false) {
-                interaction.reply({embeds: [deniedMessage(`This role isn't a role monitored by this bot`)], ephemeral: true})
-                logging("rolecommand.js-notok", `${roleId} | This role isn't a role monitored by this bot`, "edit",true)
-                return;
-            }
-
-            const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
-            //make the role mentionable
-            var mentionableError;
-            await role.setMentionable(true).catch(error => {
-                logging("rolecommand.js-notok", `${role, error} | noPerms`, "edit",true)
-                if (error.code === 50013) {
-                    mentionableError = "noPerms";
-                } else {
-                    mentionableError = error;
-                    logging("roleCommand.js", error, "edit")
-                }
-                
-            });
-            if (mentionableError === "noPerms") {
-                const rolePos = compareBotRoleRank(client, guildId, roleId);
-
-                var rolePosEmbed;
-                if (rolePos > 0) {
-                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                } else {
-                    rolePosEmbed = aprovedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                }
-
-
-                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, guildId), rolePosEmbed], ephemeral: true})
-                return;
-            }
-            if (mentionableError) {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(mentionableError)}. Please try again later`)], ephemeral: true})
-                return;
-            }
-
-            const timeoutDur = interaction.options.get('timeout-duration').value;
-            const timeoutMag = interaction.options.get('timeout-magnitude').value;
-            var timeoutTime;
-            if (timeoutMag === 0) {
-                timeoutTime = timeoutDur;
-            }
-            if(timeoutMag === 1) {
-                timeoutTime = timeoutDur*60;
-            }
-            if (timeoutMag === 2) {
-                timeoutTime = timeoutDur*60*24;
-            };
-
-            const updateTimeoutRespone = await updateTimeoutTime(roleId, timeoutTime, true)
-            if (updateTimeoutRespone === "error") {
-                await role.setMentionable(false).catch(error => {
-                    logging("rolecommand.js-notok", `${error}`, "edit",true)
-                });
-
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
-                return;
-            } else {
-                interaction.reply({embeds: [aprovedMessage(`Successfully edited this timeout role`)], ephemeral: true})
-                logging("rolecommand.js-ok", `${roleId} | Successfully edited this timeout role`, "edit",true)
-                return;
-            }
-        };
-
-        if (commandName === "remove") {
-            const guildId = interaction.guildId;
-            const roleId = interaction.options.get('role').value;
-
-            if (await roleInDatabase(roleId) === false) {
-                interaction.reply({embeds: [deniedMessage(`This role isn't a role monitored by this bot`)], ephemeral: true})
-                return;
-            }
-
-            const mentionable = interaction.options.get('mentionable').value;
-
-            const roleData = client.guilds.cache.get(guildId).roles.cache.get(roleId);
-
-            var error;
-            if (mentionable === true) {
-                await roleData.setMentionable(true, "Made role mentionable when removing it from the bot").catch(error => {
-                    logging("rolecommand.js-notok", `${error}`, "remove",true)
-
-                    if (error.code === 50013) {
-                        error = "noPerms";
-                    } else {
-                        error = "ERROR";
-                        logging("roleCommand.js", error, "remove")
-                    }
-                });
-            } else {
-                await roleData.setMentionable(false, "Made role not mentionable when removing it from the bot").catch(error => {
-                    logging("rolecommand.js-notok", `${error}`, "remove",true)
-                    if (error.code === 50013) {
-                        error = "noPerms";
-                    } else {;
-                        logging("roleCommand.js", error, "remove")
-                    }
-                });;
-            };
-            if (error === "noPerms") {
-                const rolePos = compareBotRoleRank(client, guildId, roleId);
-
-                var rolePosEmbed;
-                if (rolePos > 0) {
-                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                } else {
-                    rolePosEmbed = aprovedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                }
-
-
-                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, guildId), rolePosEmbed], ephemeral: true})
-                return;
-            }
-            if (error) {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(error)}. Please try again later`)], ephemeral: true})
-                return;
-            }
-
-            const removeResponse = await removeTimeoutRole(roleId);
-            if (removeResponse === "error") {
-                logging("rolecommand.js-notok", `removeTimeoutRole | There was an error executing this command. Please try again later`, "remove",true)
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
-                return;
-            } else {
-                logging("rolecommand.js-ok", `removeTimeoutRole | Succesfully removed this role from the bot. Mentionable ${inlineCode(mentionable)}`, "remove",true)
-                interaction.reply({embeds: [aprovedMessage(`Succesfully removed this role from the bot. Mentionable ${inlineCode(mentionable)}`)], ephemeral: true})
-                return;
-            }
-        };
-
-        //reset the timeout timer
-        if (commandName === "reset-timer") {
-            const guildId = interaction.guildId;
-            const roleId = interaction.options.get('role').value;
-
-            if (await roleInDatabase(roleId) === false) {
-                interaction.reply({embeds: [deniedMessage(`This role isn't a role monitored by this bot`)], ephemeral: true})
-                logging("rolecommand.js-notok", `${roleId} | This role isn't a role monitored by this bot`, "edit",true)
-                return;
-            }
-
-            const role = client.guilds.cache.get(guildId).roles.cache.get(roleId);
-            //make the role mentionable
-            var mentionableError;
-            await role.setMentionable(true).catch(error => {
-                logging("rolecommand.js-notok", `${role, error} | noPerms`, "edit",true)
-                if (error.code === 50013) {
-                    mentionableError = "noPerms";
-                } else {
-                    mentionableError = error;
-                    logging("roleCommand.js", error, "edit")
-                }
-                
+            //Try sending error reply (could fail cause the guild is not availabe)
+            interaction.reply({embeds: [defaultMessages.generalCommandError("Guild not availabe. Possible discord server outage", "err_Unavail_Guild")], ephemeral: true})
+            .catch(error => {
+                logging.globalWarn(__filename, 
+                    logTemplates.commandInteractionException(
+                        interaction, 
+                        "Tried to send guild unavailable interaction reply. Error could be expected.", 
+                        `guildId: ${guildId}, errId: "err_Unavail_Guild", error: ${error}`
+                        )
+                    );
             });
             
-            if (mentionableError === "noPerms") {
-                const rolePos = compareBotRoleRank(client, guildId, roleId);
-
-                var rolePosEmbed;
-                if (rolePos > 0) {
-                    rolePosEmbed = deniedMessage(`The bots role has a ${bold('lower')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                } else {
-                    rolePosEmbed = aprovedMessage(`The bots role has a ${bold('higher')} position that the role you are trying to add a timeout to!`, "Role Position Check")
-                }
+            return;
+        };
 
 
-                interaction.reply({embeds: [deniedMessage(`Could not execute this command. Check below whats wrong`), permsCheck(client, guildId), rolePosEmbed], ephemeral: true})
-                return;
-            }
-            if (mentionableError) {
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command ${inlineCode(mentionableError)}. Please try again later`)], ephemeral: true})
-                return;
-            }
+        const subCommandName = interaction.options.getSubcommand() //Get the subcommand: add/edit/remove/reset-timer
+        const commandOptionRoleId = interaction.options.get('role').value; //Get the id from the given role
+        
 
-            const editRespone = await makeMentionable(roleId, true);
+        //Get the role object from the roleId given in the command
+        const roleObject = await guildObject.roles.fetch(commandOptionRoleId) 
+        .catch((error) => {
+            logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error catching role", `code: "err_rolefetch", roleId: "${commandOptionRoleId}", error: "${error}"`));
 
-            if (editRespone === "error") {
-                logging("rolecommand.js-notok", `makeMentinable | There was an error executing this command. Please try again later`, "remove",true)
-                interaction.reply({embeds: [deniedMessage(`There was an error executing this command. Please try again later`)], ephemeral: true})
-                return;
-            } else {
-                logging("rolecommand.js-ok", `makeMentinable | Succesfully made this role Mentionable`, "remove",true)
-                interaction.reply({embeds: [aprovedMessage(`Succesfully made this role Mentionable`)], ephemeral: true})
-                return;
-            }
+            interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting more information about role", "err_rolefetch")]}) //Send a reply that there was an issue fetching the role
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+            return;
+        });
+        
+        //Get some datafrom the everyone role
+        const everyoneRole = guildObject.roles.everyone;
+        const everyoneRoleId = everyoneRole.id;
+
+
+        // Get some information about the bot and the bot's role.
+        const clientUser = guildObject.members.me;
+
+        const clientRoles = await clientUser.roles;
+
+        const clientHighestRole = clientRoles.highest;
+
+        //Check if the role is the everyone role and if so exit the code
+        if (commandOptionRoleId === everyoneRoleId) {
+            logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Tried using @everyone role in timed-role command`));
+
+            interaction.reply({embeds: [deniedMessage("You can not use the everyone role in this command.")]})
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+            return;
+        };
+
+        //Check if the role is managed
+        if (roleObject.managed) {
+            logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Tried using a managed role in timed-role command`));
+
+            interaction.reply({embeds: [deniedMessage("You can not use a role managed by a bot/intergration in this command.")]})
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+            return;
+        };
+
+        // Check if the bot has all required perms and if it can manage the given role
+        if (!botHasRequiredPerms(requiredPerms, clientUser)) {
+            logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, "Bot does not have the required perms to manage any role"));
+
+            interaction.reply({embeds: [warnMessage('The bot does not have all required permisions to function correctly. Please use "/help page:permscheck" to see all missing perms.')]})
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+            
+            return;
+        };
+
+        if (isBotHighestRole(clientHighestRole, roleObject)) {
+            logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role is bot's higest role. roleId: "${roleObject.id}"`));
+
+            interaction.reply({embeds: [warnMessage("This role is the bot's highest role. A bot can't manage it's highest role. If you want to manage this role please give it one above it.")]})
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+            return;
         }
 
+        if (!rolePosHiger(clientHighestRole, roleObject)) {
+            logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role higher than the bots highest role. roleId: "${roleObject.id}"`));
+
+            interaction.reply({embeds: [warnMessage("This role is above the bot's higest role. To manage this role you will have to lower the position of this role below the bot's highest role or add the bot to a role higher than thise one.")]})
+            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+            return;
+        };
+
+        // <- Functions used by every subcommand ===
+
+        //Calculate the duration of the timeout
+        function calculateTimeoutDuration (interaction) {
+            return new Promise(function (resolve, reject) {
+                
+                //Set the option vars
+                var commandOptionTimeoutDuration;
+                var commandOptionTimeoutMagnitude;
+
+                //Try getting commandOptionTimeoutDuration. Catch if not found
+                try {
+                    commandOptionTimeoutDuration = interaction.options.getInteger("timeout-duration", true);
+
+                } catch (error) {
+                    logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Couldn't get timeout duration option", `roleId: "${commandOptionRoleId}", error: "${error}"`));
+
+                    // Sending reply that option is unavailable.
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_option_get", error: "${error}"`)));
+
+                    reject("err_option_get");
+                    return;
+                }
+
+                //Check if the timeoutDuraction is greater than the max. If so stop code.
+                if (commandOptionTimeoutDuration > 365) return;
+                
+                //Try getting commandOptionTimeoutMagnitude. Catch if not found
+                try {
+                    commandOptionTimeoutMagnitude = interaction.options.getInteger("timeout-magnitude", true);
+                } catch (error) {
+                    logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Couldn't get timeout magnitude option ", `roleId: "${commandOptionRoleId}", error: "${error}"`))
+
+                    // Sending reply that option is unavailable.
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_option_get", error: "${error}"`)));
+
+                    reject("err_option_get");
+                    return;
+                }
+
+                // Calculate the timeout duration
+                if (commandOptionTimeoutMagnitude === 0) { //Minute
+                    resolve(commandOptionTimeoutDuration);
+                } else if (commandOptionTimeoutMagnitude === 1) { //Hour
+                    resolve(commandOptionTimeoutDuration*60);
+                } else if (commandOptionTimeoutMagnitude === 2) { //Day
+                    resolve(commandOptionTimeoutDuration*60*24);
+                } else {
+                    logging.error(__filename, logTemplates.commandInteractionException(interaction, "Timeout Magnitude is an unexpected value", `Timeout Magnitude: "${commandOptionTimeoutMagnitude}"`));
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Unexpected magnitude value", "err_timed-role_unkn_mag")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_timed-role_unkn_mag", error: "${error}"`)));
+
+                    reject("err_timed-role_unkn_mag");
+                    return;
+                };
+            });
+        };
+
+        // Check if a roleId is in the roles database table
+        function inDatabase(roleId) {
+            return new Promise(function (resolve, reject) {
+                roleInDatabase(roleId)
+                .then((result) => {
+                    if (result === true) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                })
+                .catch((error) => {
+                        logging.error(__filename, `Error checking if role is in database: database error. errCode: "${error.code}", err: "${error}"`);
+                   
+                        reject(error);
+                    }
+                );
+            });
+        };
+
+        function updateMentionableState (roleObject, mentionable, reason) {
+            return new Promise(function (resolve, reject) {
+                roleObject.setMentionable(mentionable, reason)
+                .then(() => resolve("ok"))
+                .catch((error) => reject(error));
+            });
+        };
+
+
+        //Check if role 1 is a higher pos than role 2
+        function rolePosHiger(roleObjectOne, roleObjectTwo) {
+            //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
+            const comparedPosition = roleObjectOne.comparePositionTo(roleObjectTwo);
+            
+
+            if (comparedPosition > 0) {
+                return true;
+            } else {
+                return false;
+            };
+        };
+
+        function isBotHighestRole(botHigestRole, commandRoleObject) {
+            //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
+            const comparedPosition = botHigestRole.comparePositionTo(commandRoleObject);
+
+            if (comparedPosition === 0) {
+                return true;
+            } else {
+                return false;
+            };
+        }
+
+        //Check if the bot has all required perms in an array
+        function botHasRequiredPerms(requiredPerms, botMemberObject) {
+            return botMemberObject.permissions.has([requiredPerms], true);
+        }
+
+        // === Functions used by every subcommand ->
+
+        // === Start handling the subcommands ===
+
+
+        if (subCommandName === "add") {
+            subCommandAdd();
+        } else if (subCommandName === "edit") {
+            subCommandEdit();
+        } else if (subCommandName === "remove") { // === REMOVE A TIMED ROLE LOGIC ===
+            subcommandRemove();
+        } else if (subCommandName === "reset-timer") {
+            subCommandResetTimer();
+        }
+
+        return; //Return code. Below are only functions.
+
+        // ==== Functions for the different subcommands -->
+
+        // ==== ADD -->
+        function subCommandAdd () {
+
+            //Some default variables
+            const mentionable = true;
+            
+            //Check if role is already in database. If so stop code
+            inDatabase(commandOptionRoleId)
+            .then((result) => {
+                if (result == false) {
+                    updateRoleMentionable();
+                } else {
+                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role already in roles table. roleId: "${commandOptionRoleId}"`));
+                
+                    interaction.reply({embeds: [deniedMessage("This role already is a timed role")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+    
+                    return;
+                }
+            })
+            .catch((error) => {
+                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+            });
+
+            function updateRoleMentionable() {
+                updateMentionableState(roleObject, mentionable, '"Timed-Role add" command got executed. Made role mentionable')
+                .then(() => {
+                    getTimeoutDur()
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+            //Get the duration of the timeout
+            function getTimeoutDur() {
+
+
+                calculateTimeoutDuration(interaction)
+                .then((timeoutDuration) => createNewRole(timeoutDuration))
+                .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error getting timeout Duration", `error: "${error}"`)));
+            };
+
+            function createNewRole(timeoutDuration) {
+                createNewTimedroleQuery(commandOptionRoleId, guildId, timeoutDuration, mentionable)
+                .then(() => {
+                    addSuccess();
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error creating role. code: "err_datab_rolco_createRo", errCode: ${error.code}, roleId: "${commandOptionRoleId}", guildId: "${guildId}", timeoutDuration: ""${timeoutDuration}, mentionable: "${mentionable}"`);
+    
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_createRo")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_rolco_createRo", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+
+            // Send a sucess message if everything went well
+            function addSuccess() {
+                logging.verboseInfo(__filename, `Successfully created a new timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
+
+                interaction.reply({embeds: [aprovedMessage("Successfully made this role a timed role!")]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_createdRole", error: "${error}"`)));
+
+                logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
+                return;
+            }
+
+
+        };
+        // <-- ADD ====
+
+        // ==== EDIT -->
+        function subCommandEdit() {
+
+            //Some default variables
+            const mentionable = true;
+
+            //Check if role exist in database. If not so stop code
+            inDatabase(commandOptionRoleId)
+            .then((result) => {
+                if (result == true) {
+                    updateRoleMentionable();
+                } else {
+                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
+                
+                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+                    return;
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+
+                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+            });
+
+            function updateRoleMentionable() {
+                updateMentionableState(roleObject, mentionable, '"Timed-Role edit" command got executed. Made role mentionable')
+                .then(() => {
+                    getTimeoutDur()
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+            //Get the (new) duration of the timeout
+            function getTimeoutDur() {
+
+                calculateTimeoutDuration(interaction)
+                .then((timeoutDuration) => editTimedRole(timeoutDuration))
+                .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error getting timeout Duration", `error: "${error}"`)));
+            };
+
+            function editTimedRole(timeoutDuration) {
+                editTimedRoleQuery(commandOptionRoleId, timeoutDuration, mentionable)
+                .then(() => {
+                    editSuccess();
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while editing existing timed role in database. code: "err_datab_roleco_ediRol", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", "err_datab_roleco_ediRol")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_roleco_ediRol", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+            function editSuccess() {
+                logging.verboseInfo(__filename, `Successfully edited a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
+    
+                interaction.reply({embeds: [aprovedMessage("Successfully edited this role!")]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_editRole", error: "${error}"`)));
+
+                logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
+                return;
+            }
+        };
+        // <-- EDIT ====
+
+
+        // ==== REMOVE -->
+        function subcommandRemove() {
+
+            //Check if role is already in database. If not so stop code
+            inDatabase(commandOptionRoleId)
+            .then((result) => {
+                if (result == true) {
+                    shouldMakeMentionable();
+                } else {
+                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
+                
+                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+                    return;
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+
+                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+            });
+            
+
+            //If the role should be made mentionable after deletion
+            function shouldMakeMentionable () {
+                let mentionable = interaction.options.getBoolean("mentionable");
+
+                if (mentionable) {
+                    updateRoleMentionable(true); //Role should be mentionable after deletion
+                } else {
+                    updateRoleMentionable(false);//Role shouldn't be mentionable after deletion
+                };
+            };
+
+            function updateRoleMentionable(mentionable) {
+                updateMentionableState(roleObject, mentionable, `"Timed-Role remove" command got executed. Set role mentionable status to requested state ${mentionable}`)
+                .then(() => {
+                    removeRole()
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+            function removeRole(mentionable) {
+                removeTimedRoleQuery(commandOptionRoleId)
+                .then(() => removeSuccess())
+                .catch((error) => {
+                    logging.error(__filename, `Error creating role. code: "err_datab_rolco_remRol", errCode: ${error.code}, roleId: "${commandOptionRoleId}", guildId: "${guildId}", timeoutDuration: ""${timeoutDuration}, mentionable: "${mentionable}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_remRol")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_rolco_remRol", error: "${error}"`)));
+
+                    return;
+                });
+            };
+
+            function removeSuccess() {
+                logging.verboseInfo(__filename, `Successfully removed a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
+
+                interaction.reply({embeds: [aprovedMessage("Successfully made this role a non-timed role!")]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_removedRole", error: "${error}"`)));
+
+                logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
+                return;
+            }
+        };
+        // <-- REMOVE ====
+
+
+        // ==== RESET-TIMER -->
+        function subCommandResetTimer() {
+
+            //Some default variables
+            const mentionable = true;
+
+            //Check if role exist in database. If not so stop code
+            inDatabase(commandOptionRoleId)
+            .then((result) => {
+                if (result == true) {
+                    updateRoleMentionable();
+                } else {
+                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
+                
+                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+
+                    return;
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+
+                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+            });
+
+            function updateRoleMentionable() {
+                updateMentionableState(roleObject, mentionable, '"Timed-Role reset-timer" command got executed. Set mentionable state to true')
+                .then(() => {
+                    resetTimer();
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+
+            function resetTimer() {
+                resetTimerTimedRoleQuery(commandOptionRoleId, mentionable)
+                .then(() => {
+                    logging.verboseInfo(__filename, `Successfully reset the timer of a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
+    
+                    interaction.reply({embeds: [aprovedMessage("Successfully reset the timer!")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_timerReset", error: "${error}"`)));
+
+                    logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
+                    return;
+                })
+                .catch((error) => {
+                    logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
+
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
+    
+                    return;
+                });
+            };
+        };
+        // <-- RESET_TIMER ====
+
+        // <-- Functions for the different subcommands ====
     }
 }
+

@@ -1,30 +1,42 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
+
+async function updateLastMentionQuery(roleId, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "updateLastMentionQuery" function and query');
 
 
-async function updateLastMention (roleId, lastMention, mentionable) {
-    var mentionInt;
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
     if (mentionable === true) {
-        mentionInt = 1;
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
-    
-    try {
-        await pool.query(`
+        mentionable = 0;
+    };
+
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set 
-        lastMention = ?,
+        lastMention = NOW(),
         mentionable = ?
         where
-        roleId = ?`, [lastMention, mentionInt, roleId ])
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/newMention.js/updateLastMention");
-        return "error";
-    }
-}
+        roleId = ?`, [mentionable, roleId])
+    })
+    .then(() => {
+        logging.verboseInfo(__filename, 'Successfully executed "updateLastMentionQuery" query');
+
+        resolve("ok");
+    })
+    .catch((error) => {
+        logging.error(__filename, `Error executing "updateLastMentionQuery" query. code": "err_datab_updRol", roleId: "${roleId}", errCode: "${error.code}", error: "${error}"`);
+
+        reject(error);
+    });
+};
 
 //make functions global
 module.exports = { 
-    updateLastMention,
+    updateLastMentionQuery,
 };
