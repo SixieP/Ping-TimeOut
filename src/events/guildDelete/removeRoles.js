@@ -9,7 +9,7 @@ module.exports = (client, guild) => {
     }
 
     function removeAllTimeoutGuildRoles() {
-        removeAllTimeoutGuildRoles(guildId)
+        removeAllGuildRoles(guildId)
         .then(() => logging.globalInfo(__filename, `Successfully remove a role from the database that belonged to a deleted guild. guildId: ${guildId}`))
         .catch((error) => logging.error((error) => `Error deleting all timeout roles from a deleted guild. guildId: "${guildId}", code: "err_datab_dellAllRoles, error: "${error}"'`));
     };
