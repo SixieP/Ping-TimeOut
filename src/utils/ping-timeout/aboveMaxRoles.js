@@ -1,7 +1,7 @@
 const { EmbedBuilder, inlineCode, bold, italic, PermissionFlagsBits } = require("discord.js");
 const logging = require('../baseUtils/logging');
 const { rolesByGuild } = require("../database/ping-timeout/timedRoles");
-const { getGuildSettings } = require("../database/guildSettings/guildSettings");
+const { getGuildSettings, createGuildSettings } = require("../database/guildSettings/guildSettings");
 
 module.exports = async (guildId) => {
     const guildRoles = await rolesByGuild(guildId)
@@ -19,7 +19,8 @@ module.exports = async (guildId) => {
                 return false;
             };
         } else {
-            return true;
+            createGuildSettings(guildId);
+            return false;
         }
     } else {
         return true;
