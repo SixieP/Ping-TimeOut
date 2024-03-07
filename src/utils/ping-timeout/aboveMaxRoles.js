@@ -13,7 +13,6 @@ module.exports = async (guildId) => {
 
         if (guildSettings) {
             //Check if the guild already has more roles than allowed;
-
             if (guildRoles.length >= guildSettings.maxRoles) {
                 return true;
             } else {
