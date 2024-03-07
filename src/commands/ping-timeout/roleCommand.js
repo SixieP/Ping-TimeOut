@@ -7,6 +7,7 @@ const logTemplates = require("../../utils/baseUtils/logTemplates");
 
 const { aprovedMessage, warnMessage, deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
 const defaultMessages = require("../../utils/defaults/messages/defaultMessages");
+const aboveMaxRoles = require("../../utils/ping-timeout/aboveMaxRoles");
 
 module.exports = {
     name: "timed-role",
@@ -388,25 +389,44 @@ module.exports = {
 
             //Some default variables
             const mentionable = true;
-            
-            //Check if role is already in database. If so stop code
-            inDatabase(commandOptionRoleId)
+
+            //Check if the guild has reached the max roles
+            //TODO: Rework this code later
+            aboveMaxRoles(guildId)
             .then((result) => {
                 if (result == false) {
-                    updateRoleMentionable();
+                    checkInDatabase();
                 } else {
-                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role already in roles table. roleId: "${commandOptionRoleId}"`));
+                    logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Guild has reached its max role(s). guildId: "${guildId}"`));
                 
-                    interaction.reply({embeds: [deniedMessage("This role already is a timed role")]})
+                    interaction.reply({embeds: [deniedMessage("You have reached the max allowed roles in this guild. Please visit the support discord if you would like to get this max increased. (sixie.xyz/sixie-discord)")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
     
                     return;
-                }
-            })
-            .catch((error) => {
-                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
-                .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+                };
             });
+            
+            //TODO: Changed this in the max role quickfix. See if it should be different
+            function checkInDatabase() {
+                //Check if role is already in database. If so stop code
+                inDatabase(commandOptionRoleId)
+                .then((result) => {
+                    if (result == false) {
+                        updateRoleMentionable();
+                    } else {
+                        logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role already in roles table. roleId: "${commandOptionRoleId}"`));
+                    
+                        interaction.reply({embeds: [deniedMessage("This role already is a timed role")]})
+                        .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
+        
+                        return;
+                    }
+                })
+                .catch((error) => {
+                    interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                    .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
+                });
+            }
 
             function updateRoleMentionable() {
                 updateMentionableState(roleObject, mentionable, '"Timed-Role add" command got executed. Made role mentionable')
