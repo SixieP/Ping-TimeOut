@@ -1,17 +1,22 @@
-const { logging } = require('../../baseUtils/logging');
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
 async function getAllRoles() {
-    try {
-        const [ roles ] = await pool.query(`
-        select count(roleId) as roles from roles`);
+    logging.verboseInfo(__filename, `set bot status - getAllRoles | Query executed`);
 
-        return roles;
-    } catch (error) {
-        logging("error", error, "database/botStatus/setStatus.js/getAllRoles");
-        return "error";
-    }
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
+        select count(roleId) as roles from roles`)
+        .then(([rows, fields]) => resolve(rows))
+        .catch((error) => {
+            logging.error(__filename, `Error executing query. code: "err_datab_roles_get_nr", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+        });
+    });
 }
 
 //make functions global

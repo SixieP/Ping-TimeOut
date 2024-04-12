@@ -1,37 +1,53 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
-async function newTimeOutRole(roleId, guildId, timeoutTime, mentionable) {
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
+function createNewTimedroleQuery (roleId, guildId, timeoutDuration, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "createNewTimedroleQuery" function and query');
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
+        mentionable = 0;
+    };
 
-    try {
-        await pool.query(`
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
         insert into roles
         (roleId, guildId, timeoutTime, mentionable)
         values
         (?, ?, ?, ?)`,
-        [roleId, guildId, timeoutTime, mentionInt])
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/roleCommand.js/newTimeOutRole");
-        return "error";
-    }
-}
+        [roleId, guildId, timeoutDuration, mentionable])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "createNewTimedroleQuery" query');
 
-async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "createNewTimedroleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
+
+function editTimedRoleQuery (roleId, timeoutDuration, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "editTimedRoleQuery" function and query');
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
+        mentionable = 0;
+    };
 
-    try {
-        await pool.query(`
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set
         timeOutTime = ?,
@@ -39,52 +55,82 @@ async function updateTimeoutTime(roleId, timeoutTime, mentionable) {
         inError = 0
         where
         roleId = ?`,
-        [timeoutTime, mentionInt, roleId]);
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
-        return "error";
-    }
+        [timeoutDuration, mentionable, roleId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "editTimedRoleQuery" query');
+
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "editTimedRoleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
 }
 
-async function removeTimeoutRole(roleId) {
-    try {
-        await pool.query(`
-        delete from roles
-        where
-        roleId = ?`, [roleId])
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/roleCommand.js/removeTimeoutRole");
-        return "error"
-    }
-}
+function removeTimedRoleQuery (roleId) {
+    logging.verboseInfo(__filename, 'Executing "removeTimedRoleQuery" function and query');
 
-async function makeMentionable(roleId, mentionable) {
-    var mentionInt;
-    if (mentionable === true | mentionable === 1) {
-        mentionInt = 1;
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
+        DELETE FROM roles WHERE roleId = ?`,
+        [roleId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "removeTimedRoleQuery" query');
+
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "removeTimedRoleQuery" query. code": "err_datab_rolco_createRo", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
+
+function resetTimerTimedRoleQuery(roleId, mentionable) {
+    logging.verboseInfo(__filename, 'Executing "resetTimerTimedRoleQuery" function and query');
+
+    // Database doesn't always correctly handle booleans. 0 and 1 always works.
+    if (mentionable === true) {
+        mentionable = 1;
     } else {
-        mentionInt = 0;
-    }
+        mentionable = 0;
+    };
 
-    try {
-        await pool.query(`
+    return new Promise(function(resolve, reject) {
+        promisePool.execute(`
         update roles
         set
         mentionable = ?,
         inError = 0
         where
         roleId = ?`,
-        [mentionInt, roleId]);
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/roleCommand.js/updateTimeoutTime");
-        return "error";
-    }
+        [mentionable, roleId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "resetTimerTimedRoleQuery" query');
+
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "resetTimerTimedRoleQuery" query. code": "err_datab_roleco_resetTiRoTime", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        })
+    });
 }
 
 //make functions global
 module.exports = { 
-    newTimeOutRole,
-    updateTimeoutTime,
-    removeTimeoutRole,
-    makeMentionable,
+    createNewTimedroleQuery,
+    editTimedRoleQuery,
+    removeTimedRoleQuery,
+    resetTimerTimedRoleQuery
 };

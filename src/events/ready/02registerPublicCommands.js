@@ -1,11 +1,11 @@
 const areCommandsDifferent = require('../../utils/baseUtils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/baseUtils/getApplicationCommands');
 const getLocalCommands = require('../../utils/baseUtils/getLocalCommands');
-const { logging } = require('../../utils/baseUtils/logging');
+const logging = require('../../utils/baseUtils/logging');
 
 module.exports = async (client) => {
     try {
-        logging("info", `Begin command check`, "pub_command_reg")
+        logging.info(__filename, "Begin checking public commands");
         const localCommands = getLocalCommands();
         const applicationCommands = await getApplicationCommands(
             client
@@ -21,35 +21,35 @@ module.exports = async (client) => {
 
             if (existingCommand) {
                 if (localCommand.deleted) {
+                    logging.info(__filename, `The public command '${name}' has been deleted cause it is set to deleted`);
                     await applicationCommands.delete(existingCommand.id);
-                    logging("info", `The command ${name} has been deleted cause it is set to deleted`, "pub_command_reg")
                     continue;
-                }
+                };
 
                 if (localCommand.testCommand) {
+                    logging.info(__filename, `The public command ''${name}'' has been deleted from the guild commands cause it is set to test`);
                     await applicationCommands.delete(existingCommand.id);
-                    logging("info", `The command ${name} has been deleted from the guild commands cause it is set to test`, "pub_command_reg")
                     continue;
-                }
+                };
 
                 if(areCommandsDifferent(existingCommand, localCommand)) {
+                    logging.info(__filename, `The public command '${name}' has been changed.`);
                     await applicationCommands.edit(existingCommand.id, {
                         description,
                         options,
                         defaultMemberPermissions,
                     });
-                    logging("info", `The public command ${name} has been changed.`, "pub_command_reg")
-                }
+                };
             } else {
                 if (localCommand.deleted) {
-                    logging("info", `Skipping registering public command ${name} cause it is set to deleted`, "pub_command_reg")
+                    logging.info(__filename, `Skipping registering public command '${name}' cause it is set to deleted`);
                     continue;
-                }
+                };
 
                 if (localCommand.testCommand) {
-                    logging("info", `Skipping registering "${name}" cause it is not a public command`, "pub_command_reg")
+                    logging.info(__filename, `Skipping registering "'${name}'" cause it is not a public command`);
                     continue;
-                }
+                };
 
                 await applicationCommands.create({
                     name,
@@ -58,11 +58,11 @@ module.exports = async (client) => {
                     defaultMemberPermissions,
                 });
 
-                logging("info", `The public command ${name} has been registered.`, "pub_command_reg")
-            }
+                logging.info(__filename, `The public command '${name}' has been registered.`);
+            };
         }
-        logging("info", `End command check`, "pub_command_reg")
+        logging.info(__filename, `End public command check`);
     } catch (error) {
-        logging("error", `There was a error registering a public command: ${error}`, "pub_command_reg")
+        logging.error(__filename, `There was a error registering a public command: ${error}`);
     }
 };

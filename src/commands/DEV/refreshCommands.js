@@ -1,8 +1,9 @@
 const { PermissionFlagsBits, ApplicationCommandOptionType } = require("discord.js");
 const registerPublicCommands = require('../../events/ready/02registerPublicCommands');
 const registerTestCommands = require('../../events/ready/03registerTestCommands');
-const { logging } = require("../../utils/baseUtils/logging");
 const { aprovedMessage } = require("../../utils/baseUtils/defaultEmbeds");
+
+const logging = require("../../utils/baseUtils/logging");
 
 module.exports = {
     name: "dev-reload_commands",
@@ -27,25 +28,26 @@ module.exports = {
         },
     ],
 
-    //deleted: Boolean,
+    deleted: Boolean, 
     devOnly: Boolean,
     testCommand: Boolean,
 
     callback: async (client, interaction) => {
         const commandName = interaction.options.get('command-channel').value;
         if (commandName === "public") {
-            logging("dev", "Start reloading commands", "pub_command")
+            logging.warn(__filename, `DEV COMMAND - Start reloading public command(s). userId: ${interaction.user.id}`);
             await registerPublicCommands(client);
-            logging("dev", "End reloading commands", "pub_command")
-    
             interaction.reply({embeds: [aprovedMessage("Successfully reloaded the 'public' commands!")], ephemeral: true});
+
+            logging.warn(__filename, `DEV COMMAND - End reloading public command(s). userId: ${interaction.user.id}`);
         }
         if (commandName === "test") {
-            logging("dev", "Start reloading commands", "priv_command")
-            await registerTestCommands(client);
-            logging("dev", "Start reloading commands", "priv_command")
-    
+            logging.warn(__filename, `DEV COMMAND - Start reloading test command(s). userId: ${interaction.user.id}`);
+
+            await registerTestCommands(client);    
             interaction.reply({embeds: [aprovedMessage("Successfully reloaded the 'test' commands!")], ephemeral: true});
+
+            logging.warn(__filename, `DEV COMMAND - End reloading test command(s). userId: ${interaction.user.id}`);
         }
     },
 };

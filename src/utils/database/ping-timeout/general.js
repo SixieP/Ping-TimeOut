@@ -1,23 +1,42 @@
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
-async function roleInDatabase(roleId) {
-    try {
-        const [ role ] = await pool.query(`
+function roleInDatabase(roleId) {
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
         select * from roles
         where
-        roleId = ?`, [roleId]);
+        roleId = ?`, [roleId])
+        .then(([rows, fields]) => {
+            if (rows.length === 1) {
+                resolve(true);
+            } else if (rows.length > 1) {
+                logging.warn(__filename, `roleId more than once in roles table. roleId: "${roleId}"`);
+                reject("error: err_5");
+            } else {
+                resolve(false);
+            }
+        })
+        .catch((error) => {
+            if (error.code === "ECONNREFUSED") {
+                logging.warn(__filename, `Database connection error. Code: "err_datab_nocon-roleInDatabase", errCode: "${error.code}"`);
+            } else {
+                logging.error(__filename, `Unkown database error. Code: "err_datab_unkown-roleInDatabase", errorCode: "${error.code}, error: "${error}""`);
+            }
 
-        if (role[0]) {
-            return true;
-        } else {
-            return false;
-        }
-    } catch (error) {
-        logging("error", error, "database/ping-timeout/general.js/roleInDatabase")
-        return "error";
-    }
+            try {
+                reject(error.code)
+            } catch (error) {
+                console.log(error);
+            }
+        });
+    })
 }
+
+
 
 //make functions global
 module.exports = { 

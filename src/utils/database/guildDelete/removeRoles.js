@@ -1,21 +1,32 @@
-const { logging } = require('../../baseUtils/logging');
+const logging = require('../../baseUtils/logging');
+
 const connectDatabase = require('../connectDatabase');
 const pool = connectDatabase();
+const promisePool = pool.promise();
 
 async function removeAllGuildRoles(guildId) {
-    try {
-        const [ roles ] = await pool.query(`
+    logging.verboseInfo(__filename, 'Executing "removeAllGuildRoles" function and query');
+
+    return new Promise(function (resolve, reject) {
+        promisePool.execute(`
         delete from roles
         where
         guildId = ?`,
-        [guildId]);
+        [guildId])
+        .then(() => {
+            logging.verboseInfo(__filename, 'Successfully executed "removeAllGuildRoles" query');
 
-        return roles;
-    } catch (error) {
-        logging("error", error, "database/guildDelete/removRoles.js/removeAllGuildRoles")
-        return "error";
-    }
-}
+            resolve("ok");
+            return;
+        })
+        .catch((error) => {
+            logging.error(__filename, `Error executing "removeAllGuildRoles" query. code": "err_datab_dellAllRoles", errCode: "${error.code}", error: "${error}"`);
+
+            reject(error);
+            return;
+        });
+    });
+};
 
 //make functions global
 module.exports = { 
