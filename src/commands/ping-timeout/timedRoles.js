@@ -13,6 +13,7 @@ module.exports = {
     name: "roles",
     description: "All roles that have a timer added to them and the remaining time on them",
     defaultMemberPermissions: PermissionFlagsBits.ManageMessages,
+    context: [0],
     options: [
         {
             name: "page",

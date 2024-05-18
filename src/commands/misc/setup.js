@@ -5,6 +5,7 @@ module.exports = {
     name: "setup",
     description: 'Setup instructions for the bot',
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    context: [0],
     // devOnly: Boolean,
     // inactive: Boolean,
     // testCommand: Boolean,

@@ -6,6 +6,7 @@ module.exports = {
     name: "dev-bug_report",
     description: 'Bug report blacklist command',
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    context: [0],
     options: [
         {
             name: "user",

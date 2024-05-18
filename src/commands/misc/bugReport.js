@@ -6,6 +6,7 @@ module.exports = {
     name: "bug-report",
     description: 'Report a bug in the bot',
     defaultMemberPermissions: null,
+    context: [0],
     cooldown: 60,
     // devOnly: Boolean,
     // deleted: Boolean,

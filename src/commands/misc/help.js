@@ -6,6 +6,7 @@ module.exports = {
     name: "help",
     description: 'Use this command if you need help with the bot',
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    context: [0],
     options: [
         {
             name: "page",

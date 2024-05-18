@@ -13,6 +13,7 @@ module.exports = {
     name: "check",
     description: "Check what roles are available for a timeout",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    context: [0],
     options: [
         {
             name: "page",

@@ -21,6 +21,7 @@ module.exports = {
     name: "dev-stats",
     description: "Reload all commands while you don't have to restart the bot",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    context: [0],
     options: [
         {
             name: "guild",
