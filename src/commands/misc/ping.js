@@ -3,6 +3,7 @@ module.exports = {
     name: "ping",
     description: 'Pong!',
     defaultMemberPermissions: null,
+    context: [0, 1],
     // devOnly: Boolean,
     // inactive: Boolean,
     // testCommand: Boolean,
