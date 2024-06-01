@@ -12,7 +12,7 @@ module.exports = async (client, interaction) => {
     );
 
     if (!command) {
-        logging.errorLongInteraction(__filename, "modal-handler", interaction, `Modal ID not connecting to command. There is no command with the same name as the modal ID ${interaction.customId}.`);
+        logging.error(__filename, "modal-handler", interaction, `Modal ID not connecting to command. There is no command with the same name as the modal ID ${interaction.customId}.`);
         interactionErrorResponse(interaction);
         return;
     }
@@ -20,7 +20,7 @@ module.exports = async (client, interaction) => {
     try {
         await command.modal(client, interaction);
     } catch (error) {
-        logging.errorLongInteraction(__filename, "modal-handler", interaction, `Something went wrong executing the modal code. Modal ID: ${interaction.customId} | ${error}`);
+        logging.error(__filename, "modal-handler", interaction, `Something went wrong executing the modal code. Modal ID: ${interaction.customId} | ${error}`);
         interactionErrorResponse(interaction);
     }
 }
