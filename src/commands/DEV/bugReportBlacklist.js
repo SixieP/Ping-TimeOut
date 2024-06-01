@@ -70,7 +70,7 @@ module.exports = {
         const commGroup = interaction.options.getSubcommandGroup();
         const commName = interaction.options.getSubcommand();
 
-        if (commGroup === "user") { //TODO: Fix code below, can't submit no reason anymore
+        if (commGroup === "user") {
             if (commName === "blacklist") {
                 const userId = interaction.options.get('user-id').value;
                 const reason = interaction.options.get('reason')?.value;
@@ -84,10 +84,10 @@ module.exports = {
                 const blacklistDate = new Date();
 
                 if (reason) {
-                    addUserToBlacklist(userId, blacklistDate, reason);
+                    await addUserToBlacklist(userId, blacklistDate, reason);
                     interaction.reply({embeds: [aprovedMessage(`Successfully blacklisted this user.\n ${bold("Reason:")}:\n${codeBlock(reason)}`)]})
                 } else {
-                    addUserToBlacklist(userId, blacklistDate);
+                    await addUserToBlacklist(userId, blacklistDate, null);
                     interaction.reply({embeds: [aprovedMessage(`Successfully blacklisted this user`)]})
                 };
             }
@@ -111,6 +111,7 @@ module.exports = {
                 const userId = interaction.options.get('user-id').value;
 
                 const blacklistUserQuery = await blacklistedUser(userId);
+                console.log(blacklistUserQuery?.userId);
                 if (!blacklistUserQuery?.userId) {
                     interaction.reply({embeds: [deniedMessage("This user is not blacklisted")], ephemeral: true});
                     return;

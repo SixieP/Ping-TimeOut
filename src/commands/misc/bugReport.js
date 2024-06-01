@@ -20,7 +20,7 @@ module.exports = {
         const checkUser = await blacklistedUser(userId)
         .catch((error) => logging.error(__filename, `Error fetching blacklisted users from database. interactionUserId: "${userId}", error: "${error}"`));
 
-        if (checkUser?.userId === userId) { //FIX: Fix user blacklist code.
+        if (checkUser?.userId === userId) {
             if (checkUser?.blacklistReason) {
                 interaction.reply({embeds: [deniedMessage(`You can't submit a bug-report due to you being blacklisted!\n
                 ${bold("Reason:")}
