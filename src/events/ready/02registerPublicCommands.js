@@ -13,7 +13,7 @@ module.exports = async (client) => {
 
 
         for (const localCommand of localCommands) {
-            const {name, description, options, defaultMemberPermissions} = localCommand;
+            const {name, description, options, defaultMemberPermissions, contexts, intergration_types, dm_permission } = localCommand;
 
             const existingCommand = await applicationCommands.cache.find(  
                 (cmd) => cmd.name === name
@@ -38,6 +38,9 @@ module.exports = async (client) => {
                         description,
                         options,
                         defaultMemberPermissions,
+                        contexts,
+                        intergration_types,
+                        dm_permission
                     });
                 };
             } else {
@@ -56,6 +59,9 @@ module.exports = async (client) => {
                     description,
                     options,
                     defaultMemberPermissions,
+                    contexts,
+                    intergration_types,
+                    dm_permission
                 });
 
                 logging.info(__filename, `The public command '${name}' has been registered.`);

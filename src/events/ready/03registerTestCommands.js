@@ -15,7 +15,7 @@ module.exports = async (client) => {
 
 
         for (const localCommand of localCommands) {
-            const {name, options, defaultMemberPermissions} = localCommand;
+            const {name, options, defaultMemberPermissions, contexts, intergration_types, dm_permission } = localCommand;
             const description = `TEST-COMMAND | ${localCommand.description}`;
             
 
@@ -42,6 +42,9 @@ module.exports = async (client) => {
                         description,
                         options,
                         defaultMemberPermissions,
+                        contexts,
+                        intergration_types,
+                        dm_permission
                     });
                     logging.info(__filename, `The test command '${name}' has been changed.`);
                 };
@@ -61,6 +64,9 @@ module.exports = async (client) => {
                     description,
                     options,
                     defaultMemberPermissions,
+                    contexts,
+                    intergration_types,
+                    dm_permission
                 });
                 
                 logging.info(__filename, `The test command '${name}' has been registered.`);

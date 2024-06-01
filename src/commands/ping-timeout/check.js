@@ -8,12 +8,15 @@ const logTemplates = require('../../utils/baseUtils/logTemplates');
 
 const { deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
 const defaultMessage = require('../../utils/defaults/messages/defaultMessages');
+const { dm_permission } = require("../misc/bugReport");
 
 module.exports = {
     name: "check",
     description: "Check what roles are available for a timeout",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
-    context: [0],
+    contexts: [0],
+    intergration_types: [0],
+    dm_permission: false,
     options: [
         {
             name: "page",

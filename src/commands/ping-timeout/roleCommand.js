@@ -13,7 +13,9 @@ module.exports = {
     name: "timed-role",
     description: "Command to add/edit/remove a timeout role",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
-    context: [0],
+    contexts: [0],
+    intergration_types: [0],
+    dm_permission: false,
     options: [
         {
             name: "add",

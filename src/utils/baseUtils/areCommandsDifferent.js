@@ -36,6 +36,11 @@ module.exports = (existingCommand, localCommand) => {
     return true;
   }
 
+  // check if the contexts, intergration_types and dm_permission changed
+  if ((localCommand.contexts || null) !== existingCommand.contexts) return true;
+  if ((localCommand.intergration_types || null) !== existingCommand.intergration_types) return true;
+  if ((localCommand.dm_permission || null) !== existingCommand.dm_permission) return true;
+
   //check if options are different
   
   if (localCommand.options) {
