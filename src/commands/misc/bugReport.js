@@ -32,21 +32,37 @@ module.exports = {
             return;
         };
 
-        //LATER: Add error code field
-
         const reportModal = new ModalBuilder()
             .setCustomId("bug-report")
             .setTitle("Bug Report Form");
-
         
         const bugMessage = new TextInputBuilder()
             .setCustomId("bugReportFormMessage")
             .setLabel("Describe the bug that you are experiencing")
             .setStyle(TextInputStyle.Paragraph);
 
+        const errCode = new TextInputBuilder()
+            .setCustomId("bugReportFormErrorCode")
+            .setLabel("What error code did you get?")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setMaxLength(50);
+
+        const guildIdName = new TextInputBuilder()
+            .setCustomId("bugReportFormGuidIdName")
+            .setLabel("Server name/id")
+            .setStyle(TextInputStyle.Short)
+            .setMaxLength(100)
+
         const reportModalRowOne = new ActionRowBuilder().addComponents(bugMessage);
+        const reportModalRowTwo = new ActionRowBuilder().addComponents(errCode);
+        const reportModalRowThree = new ActionRowBuilder().addComponents(guildIdName);
 
         reportModal.addComponents(reportModalRowOne);
+        reportModal.addComponents(reportModalRowTwo);
+        if (!interaction.guildId) {
+            reportModal.addComponents(reportModalRowThree);
+        };
 
         await interaction.showModal(reportModal)
     },
@@ -55,6 +71,7 @@ module.exports = {
         const { bugReportWebhookId, bugReportWebhookToken} = require('../../../config.json');
 
         const bugReportMessage = interaction.fields.getTextInputValue('bugReportFormMessage');
+        const bugReportErrCode = interaction.fields.getTextInputValue('bugReportFormErrorCode');
 
         const userInfo = interaction.user;
         const globalName = userInfo.globalName;
@@ -63,12 +80,29 @@ module.exports = {
 
         const guildId = interaction.guildId;
 
-        const bugEmbed = new EmbedBuilder()
-        .setTitle('Bug Report')
-        .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
-        .setDescription(codeBlock(bugReportMessage))
-        .setFooter({text: `GuildId: ${guildId}`})
-        .setTimestamp();
+        var bugEmbed;
+        if (guildId) {
+            bugEmbed = new EmbedBuilder()
+            .setTitle('Bug Report')
+            .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
+            .setDescription(codeBlock(bugReportMessage))
+            .setFields(
+                { name: "Error code", value: codeBlock(bugReportErrCode)}
+            )
+            .setFooter({text: `GuildId: ${guildId}`})
+            .setTimestamp();
+        } else {
+            const bugReportGuildIdName = interaction.fields.getTextInputValue('bugReportFormGuidIdName');
+            bugEmbed = new EmbedBuilder()
+            .setTitle('Bug Report')
+            .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
+            .setDescription(codeBlock(bugReportMessage))
+            .setFields(
+                { name: "Error code", value: codeBlock(bugReportErrCode)}
+            )
+            .setFooter({text: `GuildId/Name: ${bugReportGuildIdName}`})
+            .setTimestamp();
+        }
 
         const botName = client.user.username;
         const botAvatar = client.user.avatarURL();
