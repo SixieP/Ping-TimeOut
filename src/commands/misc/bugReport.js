@@ -6,7 +6,7 @@ module.exports = {
     name: "bug-report",
     description: 'Report a bug in the bot',
     defaultMemberPermissions: null,
-    contexts: [0],
+    contexts: [0, 1],
     intergration_types: [0],
     dm_permission: true,
     cooldown: 60,
