@@ -14,8 +14,9 @@ module.exports = (client) => {
         makeMentionable(client);
     })
     //set the bots status
-    cron.schedule('0-59/5 * * * *', () => {
+    /*cron.schedule('0-59/5 * * * *', () => { // == DISABLED UNTILL FIX TO REENABLE PRECENCE INTENT ==
         logging.verboseInfo(__filename, "Cron task: Setting the bot's status");
         setStatus(client);
     })
+    */
 }
