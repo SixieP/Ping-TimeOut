@@ -130,6 +130,14 @@ module.exports = {
         const totalEligibleRoles = eligibleRoles.length;
         const totalPages = Math.ceil(totalEligibleRoles/maxRolesPerPage);
 
+        // If totalPages is 0 or lower (so no roles found) return;
+        if (totalPages <= 0) {
+            interaction.reply({embeds: [deniedMessage(`This server has no role's that could ever be a monitored role`)]})
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending no other roles then @everyone/botroles are in a guild", `code: "err_int_reply", error: "${error}"`)))
+        
+            return;
+        };
+
         const requestedPageOption = interaction.options.getInteger("page");
         var requestedPage;
         if (requestedPageOption) {
