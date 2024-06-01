@@ -41,7 +41,7 @@ module.exports = async (client) => {
                     if (curDateSec > (roundedExpireTime - 1)) {
                         guildObject.roles.fetch(roleId)
                         .then((roleObject) => {
-                            makeRoleMentionable(roleObject)
+                            makeRoleMentionable(roleObject, role)
                         })
                         .catch((error) => logging.error(__filename, `Error while fetching role. code: "err_rolefetch", guildId: "${guildId}", roleId: "${roleId}", error: "${error}"`));
                     }; 
@@ -60,7 +60,7 @@ module.exports = async (client) => {
         };
     };
 
-    function makeRoleMentionable(roleObject) {
+    function makeRoleMentionable(roleObject, role) {
         const roleId = roleObject.id;
         const guildId = roleObject.guild.id;
 
@@ -71,21 +71,23 @@ module.exports = async (client) => {
             databaseRoleErrorState(roleId, false)
             .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
 
-            updateRoleInDatabase(roleId, roleObject)
+            updateRoleInDatabase(roleId, roleObject, role)
         })
         .catch((error => {
             if (error.code === 50013) {
-                noPermsMessage(client, roleId, guildId);
+                if (!role.inError) noPermsMessage(client, roleId, guildId);
             } else {
                 logging.error(__filename, `Error while making a role mentionable. code: "err_role_updaMentio", guildId: "${guildId}", roleId: "${roleId}", error: "${error}"`);
             };
 
-            databaseRoleErrorState(roleId)
-            .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+            if (role.inError == false) {
+                databaseRoleErrorState(roleId)
+                .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+            };
         }))
     };
 
-    function updateRoleInDatabase(roleId, roleObject) {
+    function updateRoleInDatabase(roleId, roleObject, role) {
         updateSetMentionable(roleId)
         .then(() => logging.verboseInfo(__filename, `Successfully made this role mentionable and edited the database. roleId: "${roleId}"`))
         .catch((error) => {
@@ -93,8 +95,10 @@ module.exports = async (client) => {
 
             //LATER: Give error to server that this role won't function until this is resolved.
 
-            databaseRoleErrorState(roleId)
-            .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+            if (role.inError == false) {
+                databaseRoleErrorState(roleId)
+                .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+            };
         });
     };
 };
