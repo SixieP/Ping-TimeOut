@@ -13,6 +13,8 @@ module.exports = {
     name: "dev-delete_commands",
     description: "Reload all commands while you don't have to restart the bot",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    contexts: [0],
+    intergration_types: [0],
     options: [
         {
             name: "command-channel",

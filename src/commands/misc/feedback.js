@@ -3,8 +3,8 @@ const { aprovedMessage, deniedMessage } = require('../../utils/baseUtils/default
 const { blacklistedUser } = require('../../utils/database/DEV/bugReportBlacklist');
 const logging = require('../../utils/baseUtils/logging');
 module.exports = {
-    name: "bug-report",
-    description: 'Report a bug in the bot',
+    name: "feedback",
+    description: 'Submit feedback',
     defaultMemberPermissions: null,
     contexts: [0, 1],
     intergration_types: [0],
@@ -17,6 +17,7 @@ module.exports = {
     callback: async (client, interaction) => {
         const userId = interaction.user.id;
 
+        // Use the same blacklist as bug report
         const checkUser = await blacklistedUser(userId)
         .catch((error) => logging.error(__filename, `Error fetching blacklisted users from database. interactionUserId: "${userId}", error: "${error}"`));
 
@@ -33,45 +34,36 @@ module.exports = {
         };
 
         const reportModal = new ModalBuilder()
-            .setCustomId("bug-report")
-            .setTitle("Bug Report Form");
+            .setCustomId("feedback")
+            .setTitle("Feedback Form");
         
         const bugMessage = new TextInputBuilder()
-            .setCustomId("bugReportFormMessage")
-            .setLabel("Describe the bug that you are experiencing")
+            .setCustomId("feedbackFormMessage")
+            .setLabel("What feedback do you have?")
             .setStyle(TextInputStyle.Paragraph);
 
         const errCode = new TextInputBuilder()
-            .setCustomId("bugReportFormErrorCode")
-            .setLabel("What error code did you get?")
+            .setCustomId("feedbackFormContactMethod")
+            .setLabel("Can we contact you and if so how?")
             .setStyle(TextInputStyle.Short)
             .setRequired(false)
-            .setMaxLength(50);
-
-        const guildIdName = new TextInputBuilder()
-            .setCustomId("bugReportFormGuidIdName")
-            .setLabel("Server name/id")
-            .setStyle(TextInputStyle.Short)
-            .setMaxLength(100)
+            .setMaxLength(150)
+            .setPlaceholder("DM @SixieP - discord.gg/invite/INVITE - any other way");
 
         const reportModalRowOne = new ActionRowBuilder().addComponents(bugMessage);
         const reportModalRowTwo = new ActionRowBuilder().addComponents(errCode);
-        const reportModalRowThree = new ActionRowBuilder().addComponents(guildIdName);
 
         reportModal.addComponents(reportModalRowOne);
         reportModal.addComponents(reportModalRowTwo);
-        if (!interaction.guildId) {
-            reportModal.addComponents(reportModalRowThree);
-        };
 
         await interaction.showModal(reportModal)
     },
 
     modal: async (client, interaction) => {
-        const { bugReportWebhookId, bugReportWebhookToken} = require('../../../config.json');
+        const { feedbackWebhookId, feedbackWebhookToken} = require('../../../config.json');
 
-        const bugReportMessage = interaction.fields.getTextInputValue('bugReportFormMessage');
-        const bugReportErrCode = interaction.fields.getTextInputValue('bugReportFormErrorCode');
+        const feedbackFormMessage = interaction.fields.getTextInputValue('feedbackFormMessage');
+        const feedbackFormContactMethod = interaction.fields.getTextInputValue('feedbackFormContactMethod');
 
         const userInfo = interaction.user;
         const globalName = userInfo.globalName;
@@ -80,34 +72,20 @@ module.exports = {
 
         const guildId = interaction.guildId;
 
-        var bugEmbed;
-        if (guildId) {
-            bugEmbed = new EmbedBuilder()
-            .setTitle('Bug Report')
-            .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
-            .setDescription(codeBlock(bugReportMessage))
-            .setFields(
-                { name: "Error code", value: codeBlock(bugReportErrCode)}
-            )
-            .setFooter({text: `GuildId: ${guildId}`})
-            .setTimestamp();
-        } else {
-            const bugReportGuildIdName = interaction.fields.getTextInputValue('bugReportFormGuidIdName');
-            bugEmbed = new EmbedBuilder()
-            .setTitle('Bug Report')
-            .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
-            .setDescription(codeBlock(bugReportMessage))
-            .setFields(
-                { name: "Error code", value: codeBlock(bugReportErrCode)}
-            )
-            .setFooter({text: `GuildId/Name: ${bugReportGuildIdName}`})
-            .setTimestamp();
-        }
+        const bugEmbed = new EmbedBuilder()
+        .setTitle('Feedback')
+        .setAuthor({name: `${globalName} (${userId})`, iconURL: userAvatar})
+        .setDescription(codeBlock(feedbackFormMessage))
+        .setFields(
+            { name: "Way to contact", value: codeBlock(feedbackFormContactMethod || "No contact method given")}
+        )
+        .setFooter({text: `GuildId: ${guildId}`})
+        .setTimestamp();
 
         const botName = client.user.username;
         const botAvatar = client.user.avatarURL();
 
-        const webhookClient = new WebhookClient({id: bugReportWebhookId, token: bugReportWebhookToken});
+        const webhookClient = new WebhookClient({id: feedbackWebhookId, token: feedbackWebhookToken});
 
         webhookClient.send({
             username: botName,
@@ -115,6 +93,6 @@ module.exports = {
             embeds: [bugEmbed],
         });
 
-        interaction.reply({embeds: [aprovedMessage("Thank you for submitting a bug report!")], ephemeral: true})
+        interaction.reply({embeds: [aprovedMessage("Thank you for submitting feedback!")], ephemeral: true})
     }
 }

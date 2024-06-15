@@ -8,11 +8,15 @@ const logTemplates = require('../../utils/baseUtils/logTemplates');
 
 const { deniedMessage } = require("../../utils/baseUtils/defaultEmbeds");
 const defaultMessage = require('../../utils/defaults/messages/defaultMessages');
+const { dm_permission } = require("../misc/bugReport");
 
 module.exports = {
     name: "check",
     description: "Check what roles are available for a timeout",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    contexts: [0],
+    intergration_types: [0],
+    dm_permission: false,
     options: [
         {
             name: "page",
@@ -125,6 +129,14 @@ module.exports = {
 
         const totalEligibleRoles = eligibleRoles.length;
         const totalPages = Math.ceil(totalEligibleRoles/maxRolesPerPage);
+
+        // If totalPages is 0 or lower (so no roles found) return;
+        if (totalPages <= 0) {
+            interaction.reply({embeds: [deniedMessage(`This server has no role's that could ever be a monitored role`)]})
+            .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error while sending no other roles then @everyone/botroles are in a guild", `code: "err_int_reply", error: "${error}"`)))
+        
+            return;
+        };
 
         const requestedPageOption = interaction.options.getInteger("page");
         var requestedPage;

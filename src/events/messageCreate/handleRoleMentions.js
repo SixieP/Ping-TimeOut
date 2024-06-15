@@ -9,6 +9,7 @@ const logTemplate = require('../../utils/baseUtils/logTemplates');
 
 const { PermissionsBitField } = require('discord.js');
 const noPermsMessage = require('../../utils/ping-timeout/noPermsMessage');
+const { statGetRole } = require('../../utils/database/DEV/stats');
 
 module.exports = async (client, message) => {
     if(message.author.bot) return; //Check if the author is a bot
@@ -60,18 +61,26 @@ module.exports = async (client, message) => {
                     makeRoleMentionable(roleObject, false);
                 })
             })
-            .catch((error) => {
+            .catch(async (error) => {
+                var inError = 0;
+                await statGetRole(roleId)
+                .then((result) => {
+                    inError = result[0].inError
+                });
+
                 if (error.code === 10011) {
                     logging.globalWarn(__filename, `Tried making a unknown role unmentionable. error: ${error}`);
                 } else if (error.code === 50013) {
                     logging.globalInfo(__filename, `Tried making a role unmentionable but the bot doesn't have the perms to do that. roleId: "${roleId}", guildId: "${guildId}"`)
-                    	noPermsMessage(client, roleId, guildId, message);
+                    	if(!inError) noPermsMessage(client, roleId, guildId, message);
                 } else {
                     logging.error(__filename, `Error while making role unmentionable. roleId: "${roleId}", guildId: "${guildId}", error: "${error}"`);
                 };
 
-                databaseRoleErrorState(roleId)
-                .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+                if (!inError) {
+                    databaseRoleErrorState(roleId)
+                    .catch((error) => logging.error(__filename, `Error while updating a role's error state in the database. roleId: "${roleId}", error: "${error}"`));
+                }
             });
         };
 

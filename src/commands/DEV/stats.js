@@ -21,6 +21,8 @@ module.exports = {
     name: "dev-stats",
     description: "Reload all commands while you don't have to restart the bot",
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    contexts: [0],
+    intergration_types: [0],
     options: [
         {
             name: "guild",
@@ -429,6 +431,50 @@ module.exports = {
                         roleColor = 0;
                     };
 
+
+                    //Check if role 1 is a higher pos than role 2
+                    function rolePosHiger(roleObjectOne, roleObjectTwo) {
+                        //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
+                        const comparedPosition = roleObjectOne.comparePositionTo(roleObjectTwo);
+                        
+
+                        if (comparedPosition > 0) {
+                            return true;
+                        } else {
+                            return false;
+                        };
+                    };
+
+                    function isBotHighestRole(botHigestRole, commandRoleObject) {
+                        //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
+                        const comparedPosition = botHigestRole.comparePositionTo(commandRoleObject);
+
+                        if (comparedPosition === 0) {
+                            return true;
+                        } else {
+                            return false;
+                        };
+                    }
+
+                    //Check if the bot has all required perms in an array
+                    function botHasRequiredPerms(requiredPerms, botMemberObject) {
+                        return botMemberObject.permissions.has([requiredPerms], true);
+                    }
+
+                    const requiredPerms = [
+                        PermissionFlagsBits.ManageRoles,
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.SendMessagesInThreads,
+                        PermissionFlagsBits.EmbedLinks,
+                        PermissionFlagsBits.UseExternalEmojis,
+                        PermissionFlagsBits.UseApplicationCommands
+                    ];
+
+                    const clientUser = guildObject.members.me;
+                    const clientRoles = await clientUser.roles;
+                    const clientHighestRole = clientRoles.highest;
+
                     const roleInfoEmbed = new EmbedBuilder()
                     .setColor(roleColor)
                     .setTitle(`${roleName} (${roleId})`)
@@ -446,6 +492,11 @@ module.exports = {
                         {name: "Timeout", value: inlineCode(secondsToDhms(timeoutDurationSec)), inline: true},
                         {name: "Last Mention", value: lastMentionFormat, inline: true},
                         {name: "Rest Time", value: restTimeRounded, inline: true}
+                    )
+                    .addFields(
+                        {name: "Bot has req perms", value: inlineCode(botHasRequiredPerms(requiredPerms, clientUser)), inline: true}, //Has the bot the required perms? true/false
+                        {name: "Is bot highest role", value: inlineCode(isBotHighestRole(clientHighestRole, roleObject)), inline: true}, //Is the role the bots highest role? true/false
+                        {name: "Bot high role is higher", value: inlineCode(rolePosHiger(clientHighestRole, roleObject)), inline: true} //Is the bots highest role higher? true/false
                     )
                     .setTimestamp();
 

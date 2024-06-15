@@ -69,7 +69,7 @@ async function blacklistedUser(userId) {
         .then(([value]) => {
             logging.verboseInfo(__filename, 'Successfully executed "blacklistedUser" query');
 
-            resolve(value);
+            resolve(value[0]);
         })
         .catch((error) => {
             logging.error(__filename, `Error executing "blacklistedUser" query. code": "err_datab_getRoles_byGui", errCode: "${error.code}", error: "${error}"`);

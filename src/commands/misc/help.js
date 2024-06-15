@@ -6,6 +6,9 @@ module.exports = {
     name: "help",
     description: 'Use this command if you need help with the bot',
     defaultMemberPermissions: PermissionFlagsBits.Administrator,
+    contexts: [0],
+    intergration_types: [0],
+    dm_permission: false,
     options: [
         {
             name: "page",
@@ -41,6 +44,7 @@ module.exports = {
         if (!page || page === "page-1") {
             embed = new EmbedBuilder()
             .setTitle("Ping TimeOut | Help")
+            .setURL("https://sixie.xyz/sixie-discord")
             .setDescription(`
             ${bold("All commands")}
 
@@ -70,6 +74,7 @@ module.exports = {
             //setup embed
             embed = new EmbedBuilder()
             .setTitle("Ping TimeOut | Setup")
+            .setURL("https://sixie.xyz/sixie-discord")
             .setDescription(`
             **Important**: You need to have the __Administrator__ permission for most of the commands. (Administrators can change slash command permissions under the intergration settings)
             

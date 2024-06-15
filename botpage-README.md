@@ -11,8 +11,8 @@
 
 ---
 ### Notes/Good to know
-- All commands (except /ping and /roles) need the administrator perm by default! You can change it in the discord 
-- The bot checks if a role its timer has run out every whole minute so it could be that a bot doesn't get made mentionable again after the exact time has run out.
+- All commands (except /ping and /roles) need the administrator perm by default! You can change it with the discord intergrations settings (Server Settings > Intergrations > Ping TimeOut).
+- The bot checks if a role its timer has run out at the start of every minute so it could be that a bot doesn't get made mentionable again at the exact time has run out.
 - People that have the ping @everyone permission do trigger the bot however due to this permission they can still ping the role. To check if the bot still works use step 4 in the setup guide.
 
 ---
@@ -32,7 +32,8 @@
 - `/help 1` *Show help page 1 (default). (adminstrator)*
 - `/help permscheck` *Checks if the bot has all required permissions to function. (adminstrator)*
 ####
-- `/bug-report` *Submit a bug report. (public)*
+- `/bug-report` *Submit a bug report to the developer. (public)*
+- `/feedback` *Submit feedback to the developer. (public)*
 - `/ping` *Gives you the bots ping (public)*
 
 ---
@@ -47,7 +48,6 @@
 - Use Slash Commands
 
 
-
 _The bot can't manage roles that have a higher position than the bot itself. Make sure that the bots role always stays higher than the roles it manages_
 
 ---
@@ -60,3 +60,5 @@ If you still need help after using and reading the _/help_ command feel free to 
 ---
 
 __This bot is online 24/7 and all commands are free to use.__
+<br>
+<sup>Disclaimer: This bot has similar features as the ping timer bot. However because of its (at the time of writing) low up-time I decided to make a similar bot that I want to share with others </sup>
