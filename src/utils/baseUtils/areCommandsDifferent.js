@@ -2,91 +2,53 @@ const { Options, DefaultDeviceProperty } = require("discord.js");
 
 module.exports = (existingCommand, localCommand) => {
 
-  // Check if defaultMemberPermissions is different
-    if (localCommand.defaultMemberPermissions || localCommand.defaultMemberPermissions === null) {
-      var existingPerms;
-      var localPerms;
+  for (const [key, value] of Object.entries(localCommand)) {
 
-      //check if existing command defaultperms is null
-      if (existingCommand.defaultMemberPermissions === null) {
-        existingPerms = existingCommand.defaultMemberPermissions;
+    //If the key is one of the following values continue;
+    const excludedKeys = [
+      "testCommand",
+      "inactive",
+      "devOnly",
+      "callback",
+      "modal",
+      "cooldown",
+      "contexts", //Include when available on discord
+      "intergration_types" //Include when available on discord
+    ];
+
+    if (excludedKeys.includes(key)) continue;
+
+    if (!existingCommand[key] && existingCommand[key] != null) return true;
+
+    //Check if the value is a string/function
+    if (typeof(value) == "string" || typeof(value) == "bigint") {
+
+      //If the value is the description check if its a test command cause that adds TEST-COMMAND to the description
+      if (key === "description" && localCommand?.testCommand) {
+        if (value != existingCommand[key].slice(15)) return true;
       } else {
-        existingPerms = existingCommand.defaultMemberPermissions.bitfield;
+        if (value != existingCommand[key]) return true;
+      };
+    } else if (typeof(value) == "boolean") {
+      if (key == "dm_permission") {
+        if (value != existingCommand["dmPermission"]) return true;
+      } else {
+        if (value != existingCommand[key]) return true;
+      };
+    } else if (typeof(value) == "object") {
+      if (key == "defaultMemberPermissions") {
+        if (value != existingCommand[key]) return true;
+      } else if (key == "options") {
+        areOptionsDifferent(value, existingCommand["options"]);
+      } else {
+        console.log(key, typeof(value), value, existingCommand[key]);
       }
-
-      localPerms = localCommand.defaultMemberPermissions;
-
-      if (existingPerms !== localPerms) {
-        return true
-      }
+    } else {
+      console.log(key, typeof(value))
     }
+  };
 
-  // Check if description is different
-  var localDescription;
-  var existingDescription = existingCommand.description;
-
-  //if the command is a testCommand add TESTCOMMAND | to the localdescription. (so it is the same as the existing command)
-  if (localCommand.testCommand) {
-    localDescription = `TEST-COMMAND | ${localCommand.description}`
-  } else {
-    localDescription = localCommand.description
-  }
-
-  if (existingDescription !== localDescription) {
-    return true;
-  }
-
-  // check if the contexts, intergration_types and dm_permission changed
-  if ((localCommand.contexts || null) !== existingCommand.contexts) return true;
-  if ((localCommand.intergration_types || null) !== existingCommand.intergration_types) return true;
-  if ((localCommand.dm_permission || null) !== existingCommand.dm_permission) return true;
-
-  //check if options are different
-  
-  if (localCommand.options) {
-    for (localOption of localCommand.options) {
-      const existingOption = existingCommand.options?.find(
-        (option) => option.name === localOption.name
-      );
-
-      //if command.option exists
-      if (localOption) {
-        const compareResult = areOptionsDifferent(localOption, existingOption);
-        if (compareResult === true) {
-          return true;
-        }
-      }
-
-      //if .options of command.options exits
-      if (localOption.options) {
-        const subGroupLocalOptions = localOption.options;
-
-        for (subGroupLocalOption of subGroupLocalOptions) {
-          const subGroupExistingOption = existingOption.options?.find(
-            (option) => option.name === subGroupLocalOption.name
-          );
-
-          const compareResult = areOptionsDifferent(subGroupLocalOption, subGroupExistingOption);
-          if (compareResult === true) {
-            return true;
-          }
-        }
-        
-      }
-    }
-  }
-
-  //check command NSFW status
-  if((localCommand.nsfw || false) !== (existingCommand.nsfw)) {
-    return true;
-  }
-
-  //check command DM perms status
-  if((localCommand.dmPermission || true) !== (existingCommand.dmPermission || true)) {
-    return true;
-  }
-
-  // If non of the conditions are true default to false
+  // If nothing changed return false
   return false;
 
   //END OF MODULE.EXPORTS
