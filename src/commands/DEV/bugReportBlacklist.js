@@ -96,8 +96,9 @@ module.exports = {
                 const userId = interaction.options.get('user-id').value;
 
                 const blacklistUserQuery = await blacklistedUser(userId);
-                if (!blacklistUserQuery.userId) {
+                if (!blacklistUserQuery?.userId) {
                     interaction.reply({embeds: [deniedMessage("This user is not blacklisted")], ephemeral: true});
+                    console.log("eee")
                     return;
                 }
 
@@ -111,7 +112,6 @@ module.exports = {
                 const userId = interaction.options.get('user-id').value;
 
                 const blacklistUserQuery = await blacklistedUser(userId);
-                console.log(blacklistUserQuery?.userId);
                 if (!blacklistUserQuery?.userId) {
                     interaction.reply({embeds: [deniedMessage("This user is not blacklisted")], ephemeral: true});
                     return;
