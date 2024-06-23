@@ -2,7 +2,7 @@
 
 Do you have a role that everyone can ping that is regularly being spammed? Then this bot is for you! 
 
-[Click here](https://discord.com/api/oauth2/authorize?client_id=1142452590685200565&permissions=275213716480&scope=bot%20applications.commands) to invite the bot to your server!
+[Click here](https://discord.com/application-directory/1142452590685200565) to show the app on the discord app directory or [click here](https://discord.com/oauth2/authorize?client_id=114245259068520056) to invite the bot directly!
 
 
 With this bot you can disable a role for a specific time so that people can only ping it every X amount of time.
