@@ -383,7 +383,7 @@ module.exports = {
                     const guildId = roleDatabaseInfoArray.guildId;
                     const lastMention = roleDatabaseInfoArray.lastMention;
                     const timeoutDuration = roleDatabaseInfoArray.timeoutTime;
-                    const mentionable = roleDatabaseInfoArray.mentionable;
+                    const mentionableInDb = roleDatabaseInfoArray.mentionable;
                     const inError = roleDatabaseInfoArray.inError;
 
 
@@ -399,6 +399,7 @@ module.exports = {
                     var roleMemberCount = roleMembersObject?.size;
                     const roleName = roleObject?.name;
                     var roleColor = roleObject?.color;
+                    const mentionableOnDiscord = roleObject?.mentionable;
 
                     const guildName = guildObject.name;
                     const guildMemberCount = guildObject.memberCount;
@@ -484,14 +485,18 @@ module.exports = {
                         {name: "Role members", value: inlineCode(roleMemberCount), inline: true}
                     )
                     .addFields(
-                        {name: "Mentionable", value: inlineCode(intToBool(mentionable)), inline: true},
-                        {name: "In Error", value: inlineCode(intToBool(inError)), inline: true},
-                        {name: "\n", value: "\n", inline: true},
-                    )
-                    .addFields(
                         {name: "Timeout", value: inlineCode(secondsToDhms(timeoutDurationSec)), inline: true},
                         {name: "Last Mention", value: lastMentionFormat, inline: true},
                         {name: "Rest Time", value: restTimeRounded, inline: true}
+                    )
+                    .addFields(
+                        {name: "\n", value: `\n`, inline: false},
+                        {name: "Debug", value: `\n`, inline: false},
+                    )
+                    .addFields(
+                        {name: "Mentionable In DB", value: inlineCode(intToBool(mentionableInDb)), inline: true},
+                        {name: "Mentionable On Discord", value: inlineCode(intToBool(mentionableOnDiscord)), inline: true},
+                        {name: "In Error", value: inlineCode(intToBool(inError)), inline: true},
                     )
                     .addFields(
                         {name: "Bot has req perms", value: inlineCode(botHasRequiredPerms(requiredPerms, clientUser)), inline: true}, //Has the bot the required perms? true/false
