@@ -124,7 +124,7 @@ module.exports = async (client, interaction) => {
                 return;
             }
         }
-        if (commandObject.permissionsRequired?.lenght) {
+        if (commandObject.permissionsRequired?.length) {
             for (const permission of commandObject.permissionsRequired) {
                 if (!interaction.member.permissions.has(permission)) {
                     logging.globalInfo(__filename, logTemplates(interaction, "User executed command without the hardcoded required perms"))
