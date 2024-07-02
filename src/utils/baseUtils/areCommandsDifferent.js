@@ -39,7 +39,17 @@ module.exports = (existingCommand, localCommand) => {
       if (key == "defaultMemberPermissions") {
         if (value != existingCommand[key]) return true;
       } else if (key == "options") {
-        areOptionsDifferent(value, existingCommand["options"]);
+        var loopCount = value.length;
+        if (loopCount < existingCommand[key].length) loopCount = existingCommand[key].length;
+
+        for (i = 0; i < loopCount; i++) {
+          const localOption = value[i];
+          const existingOption = existingCommand[key][i];
+
+          if (!localOption || !existingOption) return true;
+
+          areOptionsDifferent(localOption, existingOption);
+        };
       } else {
         console.log(key, typeof(value), value, existingCommand[key]);
       }
@@ -62,17 +72,30 @@ module.exports = (existingCommand, localCommand) => {
       localOption.type !== existingOption?.type ||
       localOption.description !== existingOption.description ||
       (localOption.required || false) !== (existingOption.required || false) ||
-      (localOption.choices?.lenght || 0) !== (existingOption.choices?.lenght || 0) ||
+      (localOption.choices?.length || 0) !== (existingOption.choices?.length || 0) ||
       areChoicesDifferent(localOption.choices || [], existingOption.choices || []) ||
       localOption.minValue !== existingOption.minValue ||
       localOption.maxValue !== existingOption.maxValue ||
       localOption.minLength !== existingOption.minLength ||
-      localOption.maxLenght !== existingOption.maxLenght
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+      localOption.maxLength !== existingOption.maxLength
+    ) return true;
+      
+    // If there are options within the options also check those
+    if (localOption.options || existingOption.options) {
+        var loopCount = localOption.options.length;
+        if (loopCount < existingOption.options.length) loopCount = existingOption.options.length;
+
+        for (i = 0; i < loopCount; i++) {
+          const embeddedLocalOption = localOption.options;
+          const embeddedExistingOption = existingOption.options[i];
+
+          if (!embeddedLocalOption || !embeddedExistingOption) return true;
+
+          areOptionsDifferent(embeddedLocalOption, embeddedExistingOption);
+        };
+    };
+
+    return false;
   }
 
   //compare local and exiting choices
