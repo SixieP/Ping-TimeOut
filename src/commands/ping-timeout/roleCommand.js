@@ -151,6 +151,8 @@ module.exports = {
             PermissionFlagsBits.UseApplicationCommands
         ];
 
+        await interaction.deferReply();
+
         const guildId = interaction.guildId;
         const guildObject = interaction.guild;
 
@@ -159,36 +161,36 @@ module.exports = {
             logging.verboseWarn(__filename, logTemplates.commandInteractionException(interaction, "Guild not availabe", `guildId: ${guildId}, errId: "err_Unavail_Guild"`));
 
             //Try sending error reply (could fail cause the guild is not availabe)
-            interaction.reply({embeds: [defaultMessages.generalCommandError("Guild not availabe. Possible discord server outage", "err_Unavail_Guild")], ephemeral: true})
+            interaction.editReply({embeds: [defaultMessages.generalCommandError("Guild not availabe. Possible discord server outage", "err_Unavail_Guild")], ephemeral: true})
             .catch(error => {
-                logging.globalWarn(__filename, 
+                logging.globalWarn(__filename,
                     logTemplates.commandInteractionException(
-                        interaction, 
-                        "Tried to send guild unavailable interaction reply. Error could be expected.", 
+                        interaction,
+                        "Tried to send guild unavailable interaction reply. Error could be expected.",
                         `guildId: ${guildId}, errId: "err_Unavail_Guild", error: ${error}`
                         )
                     );
             });
-            
+
             return;
         };
 
 
         const subCommandName = interaction.options.getSubcommand() //Get the subcommand: add/edit/remove/reset-timer
         const commandOptionRoleId = interaction.options.get('role').value; //Get the id from the given role
-        
+
 
         //Get the role object from the roleId given in the command
-        const roleObject = await guildObject.roles.fetch(commandOptionRoleId) 
+        const roleObject = await guildObject.roles.fetch(commandOptionRoleId)
         .catch((error) => {
             logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error catching role", `code: "err_rolefetch", roleId: "${commandOptionRoleId}", error: "${error}"`));
 
-            interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting more information about role", "err_rolefetch")]}) //Send a reply that there was an issue fetching the role
+            interaction.editReply({embeds: [defaultMessages.generalCommandError("Error getting more information about role", "err_rolefetch")]}) //Send a reply that there was an issue fetching the role
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
             return;
         });
-        
+
         //Get some datafrom the everyone role
         const everyoneRole = guildObject.roles.everyone;
         const everyoneRoleId = everyoneRole.id;
@@ -205,7 +207,7 @@ module.exports = {
         if (commandOptionRoleId === everyoneRoleId) {
             logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Tried using @everyone role in timed-role command`));
 
-            interaction.reply({embeds: [deniedMessage("You can not use the everyone role in this command.")]})
+            interaction.editReply({embeds: [deniedMessage("You can not use the everyone role in this command.")]})
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
             return;
@@ -215,7 +217,7 @@ module.exports = {
         if (roleObject.managed) {
             logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Tried using a managed role in timed-role command`));
 
-            interaction.reply({embeds: [deniedMessage("You can not use a role managed by a bot/intergration in this command.")]})
+            interaction.editReply({embeds: [deniedMessage("You can not use a role managed by a bot/intergration in this command.")]})
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
             return;
@@ -225,16 +227,16 @@ module.exports = {
         if (!botHasRequiredPerms(requiredPerms, clientUser)) {
             logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, "Bot does not have the required perms to manage any role"));
 
-            interaction.reply({embeds: [warnMessage('The bot does not have all required permisions to function correctly. Please use "/help page:permscheck" to see all missing perms.')]})
+            interaction.editReply({embeds: [warnMessage('The bot does not have all required permisions to function correctly. Please use "/help page:permscheck" to see all missing perms.')]})
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
-            
+
             return;
         };
 
         if (isBotHighestRole(clientHighestRole, roleObject)) {
             logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role is bot's higest role. roleId: "${roleObject.id}"`));
 
-            interaction.reply({embeds: [warnMessage("This role is the bot's highest role. A bot can't manage it's highest role. If you want to manage this role please give it one above it.")]})
+            interaction.editReply({embeds: [warnMessage("This role is the bot's highest role. A bot can't manage it's highest role. If you want to manage this role please give it one above it.")]})
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
             return;
@@ -243,7 +245,7 @@ module.exports = {
         if (!rolePosHiger(clientHighestRole, roleObject)) {
             logging.verboseInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role higher than the bots highest role. roleId: "${roleObject.id}"`));
 
-            interaction.reply({embeds: [warnMessage("This role is above the bot's higest role. To manage this role you will have to lower the position of this role below the bot's highest role or add the bot to a role higher than thise one.")]})
+            interaction.editReply({embeds: [warnMessage("This role is above the bot's higest role. To manage this role you will have to lower the position of this role below the bot's highest role or add the bot to a role higher than thise one.")]})
             .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
             return;
@@ -254,7 +256,7 @@ module.exports = {
         //Calculate the duration of the timeout
         function calculateTimeoutDuration (interaction) {
             return new Promise(function (resolve, reject) {
-                
+
                 //Set the option vars
                 var commandOptionTimeoutDuration;
                 var commandOptionTimeoutMagnitude;
@@ -267,7 +269,7 @@ module.exports = {
                     logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Couldn't get timeout duration option", `roleId: "${commandOptionRoleId}", error: "${error}"`));
 
                     // Sending reply that option is unavailable.
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_option_get", error: "${error}"`)));
 
                     reject("err_option_get");
@@ -276,7 +278,7 @@ module.exports = {
 
                 //Check if the timeoutDuraction is greater than the max. If so stop code.
                 if (commandOptionTimeoutDuration > 365) return;
-                
+
                 //Try getting commandOptionTimeoutMagnitude. Catch if not found
                 try {
                     commandOptionTimeoutMagnitude = interaction.options.getInteger("timeout-magnitude", true);
@@ -284,7 +286,7 @@ module.exports = {
                     logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Couldn't get timeout magnitude option ", `roleId: "${commandOptionRoleId}", error: "${error}"`))
 
                     // Sending reply that option is unavailable.
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error getting magnitude command option", "err_option_get")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_option_get", error: "${error}"`)));
 
                     reject("err_option_get");
@@ -301,7 +303,7 @@ module.exports = {
                 } else {
                     logging.error(__filename, logTemplates.commandInteractionException(interaction, "Timeout Magnitude is an unexpected value", `Timeout Magnitude: "${commandOptionTimeoutMagnitude}"`));
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Unexpected magnitude value", "err_timed-role_unkn_mag")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Unexpected magnitude value", "err_timed-role_unkn_mag")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_timed-role_unkn_mag", error: "${error}"`)));
 
                     reject("err_timed-role_unkn_mag");
@@ -323,19 +325,19 @@ module.exports = {
                 })
                 .catch((error) => {
                         logging.error(__filename, `Error checking if role is in database: database error. errCode: "${error.code}", err: "${error}"`);
-                   
+
                         reject(error);
                     }
                 );
             });
         };
 
-        function updateMentionableState (roleObject, mentionable, reason) {
-            return new Promise(function (resolve, reject) {
-                roleObject.setMentionable(mentionable, reason)
-                .then(() => resolve("ok"))
-                .catch((error) => reject(error));
-            });
+        async function updateMentionableState (roleObject, mentionable, reason) {
+            try {
+                await roleObject.setMentionable(mentionable, reason)
+            } catch (error) {
+                console.error(error)
+            }
         };
 
 
@@ -343,7 +345,7 @@ module.exports = {
         function rolePosHiger(roleObjectOne, roleObjectTwo) {
             //Compare the bot's role with another role. Pos = botRole higher, min = botRole lower, equal = same role.
             const comparedPosition = roleObjectOne.comparePositionTo(roleObjectTwo);
-            
+
 
             if (comparedPosition > 0) {
                 return true;
@@ -371,7 +373,6 @@ module.exports = {
         // === Functions used by every subcommand ->
 
         // === Start handling the subcommands ===
-
 
         if (subCommandName === "add") {
             subCommandAdd();
@@ -401,14 +402,14 @@ module.exports = {
                     checkInDatabase();
                 } else {
                     logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Guild has reached its max role(s). guildId: "${guildId}"`));
-                
-                    interaction.reply({embeds: [deniedMessage("You have reached the max allowed roles in this guild. Please visit the support discord if you would like to get this max increased. (sixie.xyz/sixie-discord)")]})
+
+                    interaction.editReply({embeds: [deniedMessage("You have reached the max allowed roles in this guild. Please visit the support discord if you would like to get this max increased. (sixie.xyz/sixie-discord)")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
-    
+
                     return;
                 };
             });
-            
+
             //TODO: Changed this in the max role quickfix. See if it should be different
             function checkInDatabase() {
                 //Check if role is already in database. If so stop code
@@ -418,38 +419,35 @@ module.exports = {
                         updateRoleMentionable();
                     } else {
                         logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role already in roles table. roleId: "${commandOptionRoleId}"`));
-                    
-                        interaction.reply({embeds: [deniedMessage("This role already is a timed role")]})
+
+                        interaction.editReply({embeds: [deniedMessage("This role already is a timed role")]})
                         .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
-        
+
                         return;
                     }
                 })
                 .catch((error) => {
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
                 });
             }
 
             function updateRoleMentionable() {
                 updateMentionableState(roleObject, mentionable, '"Timed-Role add" command got executed. Made role mentionable')
-                .then(() => {
-                    getTimeoutDur()
-                })
                 .catch((error) => {
                     logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
-    
+
                     return;
                 });
-            };
+
+                getTimeoutDur()
+            }
 
             //Get the duration of the timeout
             function getTimeoutDur() {
-
-
                 calculateTimeoutDuration(interaction)
                 .then((timeoutDuration) => createNewRole(timeoutDuration))
                 .catch((error) => logging.warn(__filename, logTemplates.commandInteractionException(interaction, "Error getting timeout Duration", `error: "${error}"`)));
@@ -462,10 +460,10 @@ module.exports = {
                 })
                 .catch((error) => {
                     logging.error(__filename, `Error creating role. code: "err_datab_rolco_createRo", errCode: ${error.code}, roleId: "${commandOptionRoleId}", guildId: "${guildId}", timeoutDuration: ""${timeoutDuration}, mentionable: "${mentionable}"`);
-    
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_createRo")]})
+
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_createRo")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_rolco_createRo", error: "${error}"`)));
-    
+
                     return;
                 });
             };
@@ -475,7 +473,7 @@ module.exports = {
             function addSuccess() {
                 logging.verboseInfo(__filename, `Successfully created a new timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
 
-                interaction.reply({embeds: [aprovedMessage("Successfully made this role a timed role!")]})
+                interaction.editReply({embeds: [aprovedMessage("Successfully made this role a timed role!")]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_createdRole", error: "${error}"`)));
 
                 logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
@@ -499,33 +497,30 @@ module.exports = {
                     updateRoleMentionable();
                 } else {
                     logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
-                
-                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+
+                    interaction.editReply({embeds: [deniedMessage("This role is not a timed role")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
                     return;
                 }
             })
             .catch((error) => {
-                console.log(error);
-
-                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                interaction.editReply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
             });
 
             function updateRoleMentionable() {
                 updateMentionableState(roleObject, mentionable, '"Timed-Role edit" command got executed. Made role mentionable')
-                .then(() => {
-                    getTimeoutDur()
-                })
                 .catch((error) => {
                     logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
-    
+
                     return;
                 });
+
+                getTimeoutDur()
             };
 
             //Get the (new) duration of the timeout
@@ -544,17 +539,17 @@ module.exports = {
                 .catch((error) => {
                     logging.error(__filename, `Error while editing existing timed role in database. code: "err_datab_roleco_ediRol", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", "err_datab_roleco_ediRol")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Database error", "err_datab_roleco_ediRol")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_roleco_ediRol", error: "${error}"`)));
-    
+
                     return;
                 });
             };
 
             function editSuccess() {
                 logging.verboseInfo(__filename, `Successfully edited a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
-    
-                interaction.reply({embeds: [aprovedMessage("Successfully edited this role!")]})
+
+                interaction.editReply({embeds: [aprovedMessage("Successfully edited this role!")]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_editRole", error: "${error}"`)));
 
                 logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
@@ -574,20 +569,18 @@ module.exports = {
                     shouldMakeMentionable();
                 } else {
                     logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
-                
-                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+
+                    interaction.editReply({embeds: [deniedMessage("This role is not a timed role")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
                     return;
                 }
             })
             .catch((error) => {
-                console.log(error);
-
-                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                interaction.editReply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
             });
-            
+
 
             //If the role should be made mentionable after deletion
             function shouldMakeMentionable () {
@@ -602,17 +595,16 @@ module.exports = {
 
             function updateRoleMentionable(mentionable) {
                 updateMentionableState(roleObject, mentionable, `"Timed-Role remove" command got executed. Set role mentionable status to requested state ${mentionable}`)
-                .then(() => {
-                    removeRole()
-                })
                 .catch((error) => {
                     logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
-    
+
                     return;
                 });
+
+                removeRole()
             };
 
             function removeRole(mentionable) {
@@ -621,7 +613,7 @@ module.exports = {
                 .catch((error) => {
                     logging.error(__filename, `Error creating role. code: "err_datab_rolco_remRol", errCode: ${error.code}, roleId: "${commandOptionRoleId}", guildId: "${guildId}", timeoutDuration: ""${timeoutDuration}, mentionable: "${mentionable}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_remRol")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error creating new timed role", "err_datab_rolco_remRol")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab_rolco_remRol", error: "${error}"`)));
 
                     return;
@@ -631,7 +623,7 @@ module.exports = {
             function removeSuccess() {
                 logging.verboseInfo(__filename, `Successfully removed a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
 
-                interaction.reply({embeds: [aprovedMessage("Successfully made this role a non-timed role!")]})
+                interaction.editReply({embeds: [aprovedMessage("Successfully made this role a non-timed role!")]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_removedRole", error: "${error}"`)));
 
                 logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
@@ -654,41 +646,38 @@ module.exports = {
                     updateRoleMentionable();
                 } else {
                     logging.globalInfo(__filename, logTemplates.commandInteractionInfo(interaction, `Role not in roles table. Stopping timed-role remove command. roleId: "${commandOptionRoleId}"`));
-                
-                    interaction.reply({embeds: [deniedMessage("This role is not a timed role")]})
+
+                    interaction.editReply({embeds: [deniedMessage("This role is not a timed role")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
 
                     return;
                 }
             })
             .catch((error) => {
-                console.log(error);
-
-                interaction.reply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
+                interaction.editReply({embeds: [defaultMessages.generalCommandError("Database error", `err_datab/${error.code}`)]})
                 .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_datab", error: "${error}"`)));
             });
 
             function updateRoleMentionable() {
                 updateMentionableState(roleObject, mentionable, '"Timed-Role reset-timer" command got executed. Set mentionable state to true')
-                .then(() => {
-                    resetTimer();
-                })
                 .catch((error) => {
                     logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
-    
+
                     return;
                 });
+
+                resetTimer();
             };
 
             function resetTimer() {
                 resetTimerTimedRoleQuery(commandOptionRoleId, mentionable)
                 .then(() => {
                     logging.verboseInfo(__filename, `Successfully reset the timer of a timed role. roleId: "${commandOptionRoleId}", guildId: "${guildId}"`);
-    
-                    interaction.reply({embeds: [aprovedMessage("Successfully reset the timer!")]})
+
+                    interaction.editReply({embeds: [aprovedMessage("Successfully reset the timer!")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/inf_roleCo_timerReset", error: "${error}"`)));
 
                     logging.globalInfo(__filename, logTemplates.commandInteractionEnd(interaction)); //Mark the end of the command interaction
@@ -697,9 +686,9 @@ module.exports = {
                 .catch((error) => {
                     logging.error(__filename, `Error while making role mentionable. code: "err_role_updaMentio", error: "${error}"`);
 
-                    interaction.reply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
+                    interaction.editReply({embeds: [defaultMessages.generalCommandError("Error updating role mentionable state", "err_role_updaMentio")]})
                     .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply/err_role_updaMentio", error: "${error}"`)));
-    
+
                     return;
                 });
             };
