@@ -75,7 +75,7 @@ async function statGetRole(roleId) {
     logging.verboseInfo(__filename, 'Executing "statGetRole" function and query');
 
     return new Promise(function (resolve, reject) {
-        promisePool.execute(`
+        return promisePool.execute(`
         select * from roles
         where
         roleId = ?;
