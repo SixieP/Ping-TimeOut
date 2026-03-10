@@ -52,7 +52,7 @@ async function updateSetMentionable (roleId) {
 async function databaseRoleErrorState (roleId, errorState = true) {
     logging.verboseInfo(__filename, 'Executing "databaseRoleErrorState" function and query');
 
-    if (errorState === false | errorState === 0) {
+    if (errorState === false || errorState === false) {
         errorState = 0;
     } else {
         errorState = 1;
