@@ -177,19 +177,11 @@ module.exports = {
 
 
         const subCommandName = interaction.options.getSubcommand() //Get the subcommand: add/edit/remove/reset-timer
-        const commandOptionRoleId = interaction.options.get('role').value; //Get the id from the given role
 
 
         //Get the role object from the roleId given in the command
-        const roleObject = await guildObject.roles.fetch(commandOptionRoleId)
-        .catch((error) => {
-            logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error catching role", `code: "err_rolefetch", roleId: "${commandOptionRoleId}", error: "${error}"`));
-
-            interaction.editReply({embeds: [defaultMessages.generalCommandError("Error getting more information about role", "err_rolefetch")]}) //Send a reply that there was an issue fetching the role
-            .catch((error) => logging.error(__filename, logTemplates.commandInteractionException(interaction, "Error while sending interaction reply", `code: "err_int_reply", error: "${error}"`)));
-
-            return;
-        });
+        const roleObject = interaction.options.getRole('role');
+        const commandOptionRoleId = roleObject.id;
 
         //Get some datafrom the everyone role
         const everyoneRole = guildObject.roles.everyone;
@@ -333,8 +325,11 @@ module.exports = {
         };
 
         async function updateMentionableState (roleObject, mentionable, reason) {
+            console.log("updateMentiableState")
+
             try {
-                await roleObject.setMentionable(mentionable, reason)
+                const role = await roleObject.setMentionable(mentionable, reason);
+
             } catch (error) {
                 console.error(error)
             }
@@ -413,7 +408,7 @@ module.exports = {
             //TODO: Changed this in the max role quickfix. See if it should be different
             function checkInDatabase() {
                 //Check if role is already in database. If so stop code
-                inDatabase(commandOptionRoleId)
+                inDatabase(roleObject.id)
                 .then((result) => {
                     if (result == false) {
                         updateRoleMentionable();
